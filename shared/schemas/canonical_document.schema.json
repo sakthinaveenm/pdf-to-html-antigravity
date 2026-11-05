@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CanonicalDocument",
+  "type": "object",
+  "required": ["documentId", "sourceFileName", "sourceChecksum", "title", "language", "revision", "pages", "blocks"],
+  "properties": {
+    "documentId": { "type": "string" },
+    "sourceFileName": { "type": "string" },
+    "sourceChecksum": { "type": "string" },
+    "title": { "type": "string" },
+    "language": { "type": "string" },
+    "revision": { "type": "integer" },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pageNumber": { "type": "integer" },
+          "width": { "type": "number" },
+          "height": { "type": "number" },
+          "classification": { "type": "string" }
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["blockId", "blockType", "sourcePage", "readingOrder"],
+        "properties": {
+          "blockId": { "type": "string" },
+          "blockType": { "type": "string" },
+          "sourcePage": { "type": "integer" },
+          "language": { "type": "string" },
+          "direction": { "type": "string" },
+          "content": { "type": "string" },
+          "readingOrder": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
