@@ -60,3 +60,4 @@ This platform is licensed under the **Apache License 2.0**.
 ## 5. Fonts & Typography
 - Standard system fonts (`Noto Sans`, `Devanagari Sangam MN`, `Tamil Sangam MN`, `Arial Unicode MS`, `Geeza Pro`) are utilized without bundling unauthorized proprietary font files.
 - Offline reader CSS relies solely on pre-installed system fonts, ensuring zero external font downloading or copyright infringement.
+

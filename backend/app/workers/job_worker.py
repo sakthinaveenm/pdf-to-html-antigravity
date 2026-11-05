@@ -234,3 +234,4 @@ class JobProcessor:
             db.commit()
 
 job_processor = JobProcessor()
+

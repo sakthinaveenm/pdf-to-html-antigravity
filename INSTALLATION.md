@@ -123,3 +123,4 @@ docker compose -f docker/docker-compose.yml up --build
 ```
 - Web Application: `http://localhost:3000`
 - REST API: `http://localhost:8000`
+

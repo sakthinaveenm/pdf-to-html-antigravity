@@ -58,3 +58,4 @@ def delete_highlight(document_id: str, highlight_id: str, db: Session = Depends(
     if not deleted:
         raise HTTPException(status_code=404, detail="Highlight not found.")
     return {"status": "success", "message": "Highlight deleted."}
+

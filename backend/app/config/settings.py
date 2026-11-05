@@ -94,3 +94,4 @@ class Settings(BaseSettings):
 
 settings = Settings()
 settings.ensure_directories()
+

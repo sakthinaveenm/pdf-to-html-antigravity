@@ -180,3 +180,4 @@ def retry_job(job_id: str, db: Session = Depends(get_db)):
     record.error_message = None
     db.commit()
     return {"status": JobStatus.QUEUED.value, "message": "Job queued for retry."}
+

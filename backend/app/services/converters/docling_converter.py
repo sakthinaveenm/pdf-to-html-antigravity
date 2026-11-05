@@ -172,3 +172,4 @@ class DoclingConverter(PDFConverter):
             metadata={"engine": "docling", "total_blocks": len(all_blocks)},
             warnings=warnings
         )
+

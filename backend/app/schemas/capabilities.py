@@ -67,3 +67,4 @@ class SystemCapabilities(BaseModel):
     installedOcrLanguages: List[str]
     converters: List[ConverterInfo]
     defaultConverter: str
+

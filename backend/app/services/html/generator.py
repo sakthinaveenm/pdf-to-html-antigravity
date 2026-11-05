@@ -323,3 +323,4 @@ class HTMLGenerationService:
 </html>"""
 
 html_generation_service = HTMLGenerationService()
+

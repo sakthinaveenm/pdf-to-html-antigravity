@@ -74,3 +74,4 @@ flowchart TD
 ### Safety Guarantees
 - No document conversion ever fails silently.
 - If an advanced neural engine runs out of memory (e.g. on 4 GB VRAM systems), the pipeline logs a `CONVERTER_FALLBACK` warning and executes the Native Hybrid converter to completion.
+

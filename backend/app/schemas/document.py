@@ -32,3 +32,4 @@ class DocumentRevisionResponse(BaseModel):
     revisionNumber: int
     changeSummary: str
     createdAt: datetime
+

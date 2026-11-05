@@ -254,3 +254,4 @@ export const UploadScreen: React.FC = () => {
     </div>
   );
 };
+

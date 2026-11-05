@@ -100,3 +100,4 @@ Uploaded PDFs are treated as untrusted files. All generated or edited HTML passe
 - Strips event attributes (`onclick`, `onerror`, `onload`).
 - Strips dangerous URL schemes (`javascript:`, `vbscript:`).
 - Preserves all safe document formatting and semantic attributes (`data-block-id`, `data-page`, `data-highlight-id`, `dir`, `lang`, `src`, `alt`).
+

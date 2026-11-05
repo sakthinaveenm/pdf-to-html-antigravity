@@ -80,3 +80,4 @@ export interface ReaderBridgeMessage<T = unknown> {
   type: ReaderToNativeMessageType | NativeToReaderMessageType;
   payload: T;
 }
+

@@ -45,3 +45,4 @@ class HighlightResponse(BaseModel):
 
     class Config:
         from_attributes = True
+

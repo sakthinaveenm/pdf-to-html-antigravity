@@ -97,3 +97,4 @@ def test_native_convert_scanned_ocr(native_converter, tmp_path):
     
     full_text = " ".join([b.content for b in doc.blocks if b.content])
     assert "Historical" in full_text or "Scanned" in full_text or "Tesseract" in full_text
+

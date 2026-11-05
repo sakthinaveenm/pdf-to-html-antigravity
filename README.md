@@ -200,3 +200,4 @@ export function DocumentViewScreen({ htmlContent, docId, savedHighlights }) {
 ## License
 
 This project is open-source software licensed under the [Apache License 2.0](LICENSES.md).
+

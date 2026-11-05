@@ -37,3 +37,4 @@ class JobListResponse(BaseModel):
 
 class BatchUploadResponse(BaseModel):
     jobs: List[JobResponse]
+

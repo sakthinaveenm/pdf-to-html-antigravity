@@ -45,3 +45,4 @@ class BlockType(str, Enum):
     EQUATION = "equation"
     CODE = "code"
     PAGE_BREAK = "pageBreak"
+

@@ -160,3 +160,4 @@ Update highlight color or note.
 
 ### `DELETE /documents/{documentId}/highlights/{highlightId}`
 Delete a highlight by ID.
+

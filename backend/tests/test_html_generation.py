@@ -95,3 +95,4 @@ def test_unicode_combining_characters_preservation():
     indic_text = '<p data-block-id="blk-tam">தமிழ் ஒரு தொன்மையான செம்மொழி.</p>'
     normalized = html_normalization_service.normalize(indic_text)
     assert "தமிழ் ஒரு தொன்மையான செம்மொழி." in normalized
+

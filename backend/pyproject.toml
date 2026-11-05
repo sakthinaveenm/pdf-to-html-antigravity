@@ -46,3 +46,4 @@ dev = [
 testpaths = ["backend/tests"]
 pythonpath = ["."]
 addopts = "-v --tb=short"
+

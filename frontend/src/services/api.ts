@@ -73,3 +73,4 @@ export const api = {
   getExportZipUrl: (documentId: string) => `${API_BASE}/documents/${documentId}/export`,
   getOriginalPdfUrl: (documentId: string) => `${API_BASE}/documents/${documentId}/pdf`,
 };
+

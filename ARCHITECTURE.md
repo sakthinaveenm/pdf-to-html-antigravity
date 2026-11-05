@@ -221,3 +221,4 @@ The reader communicates bidirectionally with the host React Native application v
 - **Concurrency Control**: A single worker thread runs by default (`MAX_CONCURRENT_WORKERS = 1`), preventing OOM crashes on 16 GB RAM systems when heavy models run.
 - **Crash Recovery**: On application boot, any jobs in `INSPECTING`, `CONVERTING`, or `OCR_PROCESSING` are reset to `QUEUED` or marked `FAILED` with retry eligibility.
 - **Graceful Cancellation**: Workers check `job.is_cancelled` before each major pipeline phase and clean up scratch buffers.
+

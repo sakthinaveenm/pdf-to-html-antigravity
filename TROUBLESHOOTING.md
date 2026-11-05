@@ -63,3 +63,4 @@
 **Solution**:
 - The platform automatically executes `PRAGMA journal_mode=WAL;` and `PRAGMA synchronous=NORMAL;` on database connection.
 - SQLite WAL (Write-Ahead Logging) allows concurrent readers alongside a single active writer without lock contention.
+

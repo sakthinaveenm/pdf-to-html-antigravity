@@ -40,3 +40,4 @@ class PDFConverter(ABC):
     def get_capabilities(self) -> ConverterCapabilities:
         """Return engine capabilities and hardware compatibility."""
         pass
+

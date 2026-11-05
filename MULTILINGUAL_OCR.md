@@ -64,3 +64,4 @@ The platform integrates `python-bidi` and `arabic-reshaper`:
 - Detects Arabic and Urdu script codepoint ranges (`0x0600`–`0x06FF`).
 - Applies `get_display()` to invert physical visual order into **logical Unicode reading order** (`تاريخ اللغة العربية وآدابها`).
 - Emits `<p dir="rtl" lang="ar">` attributes so the browser renders right-aligned, connected cursive text nodes.
+

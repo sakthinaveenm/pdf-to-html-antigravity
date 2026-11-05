@@ -90,3 +90,4 @@ When a user edits document HTML and saves a new revision:
    - If multiple occurrences exist, disambiguates using `prefix + exact + suffix`.
    - If matched, recalculates `start_offset` and `end_offset`, updates `revision = new_revision`, and marks `resolved = true`.
    - If the text was deleted, marks `resolved = false` instead of placing the annotation on incorrect content.
+

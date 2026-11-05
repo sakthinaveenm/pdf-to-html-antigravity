@@ -255,3 +255,4 @@ class PDFInspectionService:
             pages=pages_inspection,
             warnings=doc_warnings
         )
+

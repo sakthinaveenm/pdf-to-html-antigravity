@@ -164,3 +164,4 @@ class MarkerConverter(PDFConverter):
             metadata={"engine": "marker", "total_blocks": len(all_blocks)},
             warnings=[]
         )
+

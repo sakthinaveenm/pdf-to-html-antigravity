@@ -224,3 +224,4 @@ export const QueueScreen: React.FC = () => {
     </div>
   );
 };
+

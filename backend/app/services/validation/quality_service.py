@@ -124,3 +124,4 @@ class DocumentQualityService:
         )
 
 quality_service = DocumentQualityService()
+

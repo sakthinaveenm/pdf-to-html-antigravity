@@ -100,3 +100,4 @@ def get_tesseract_langs_for_scripts(scripts: List[str]) -> str:
         if s in mapping:
             codes.add(mapping[s])
     return "+".join(sorted(codes))
+

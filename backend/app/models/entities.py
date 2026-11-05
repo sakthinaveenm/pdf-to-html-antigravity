@@ -96,3 +96,4 @@ class Highlight(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     document = relationship("Document", back_populates="highlights")
+

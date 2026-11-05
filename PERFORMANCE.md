@@ -40,3 +40,4 @@ Benchmarks conducted on host system across diverse document profiles:
    - Limit OCR languages to the specific language codes required for the document (e.g. `eng+tam`) to avoid unnecessary inference overhead over uninstalled dictionaries.
 3. **Hardware Scaling**:
    - For systems with 32 GB RAM or dedicated 16 GB GPUs, increase `MAX_CONCURRENT_WORKERS=2` or `4` in `.env`.
+

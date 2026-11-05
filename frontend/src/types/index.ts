@@ -95,3 +95,4 @@ export interface SystemCapabilities {
   converters: ConverterInfo[];
   defaultConverter: string;
 }
+

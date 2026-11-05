@@ -40,3 +40,4 @@ def test_inspect_nonexistent_pdf(inspector):
     report = inspector.inspect(pdf_path)
     assert report.is_valid_pdf is False
     assert len(report.warnings) > 0
+
