@@ -123,3 +123,4 @@ We gratefully acknowledge the creators, maintainers, and open-source communities
 2. **IBM Research and the Docling Project** for advancing open-source document layout parsing and tabular extraction under permissive licenses.
 3. **The TipTap and ProseMirror Teams** for creating accessible, schema-driven rich text editing primitives.
 4. **The W3C Web Annotation Working Group and Hypothesis Project** for establishing resilient text quote and position anchoring standards.
+

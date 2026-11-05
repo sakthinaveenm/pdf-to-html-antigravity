@@ -102,3 +102,4 @@ def test_highlight_across_inline_formatting(memory_db):
     assert all_hl[0].resolved is True
     # 'Notice: This ' = 13 characters -> 'is very important text' starts at index 13
     assert all_hl[0].position.start == 13
+

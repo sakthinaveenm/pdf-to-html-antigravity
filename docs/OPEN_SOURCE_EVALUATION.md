@@ -202,3 +202,4 @@ This report documents the rigorous evaluation of existing open-source projects, 
 | HTML Editor | **TipTap (ProseMirror)** | Slate / Quill | Strict schema enforcement; robust table extensions; MIT license. |
 | Text Highlighting | **W3C Annotation Adapter (Hypothesis-spec)** | Hypothesis Full Client | Lightweight zero-dependency script optimized for React Native WebView and CSS Highlights. |
 | HTML Sanitization | **nh3** | Bleach | Rust-based memory safety; 20x faster than Bleach; explicit tag/attribute whitelisting. |
+

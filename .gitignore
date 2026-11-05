@@ -7,6 +7,9 @@ venv/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # SQLite & Storage data
 storage/originals/*
@@ -18,6 +21,9 @@ storage/scratch/*
 storage/jobs.db
 storage/jobs.db-wal
 storage/jobs.db-shm
+storage/*.db
+storage/*.db-wal
+storage/*.db-shm
 
 # Node & Frontend
 node_modules/
@@ -29,7 +35,15 @@ yarn-error.log*
 
 # Environment & OS
 .env
+.env.*
+!.env.example
 .DS_Store
 Thumbs.db
-.pytest_cache/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
 
