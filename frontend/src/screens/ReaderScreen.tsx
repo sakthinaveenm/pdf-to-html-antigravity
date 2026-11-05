@@ -9,6 +9,7 @@ import {
   Monitor,
   Trash2,
   Highlighter,
+  Search,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DocumentMeta, Highlight, TextQuote, TextPosition } from '../types';
@@ -21,6 +22,7 @@ export const ReaderScreen: React.FC = () => {
   const [fontScale, setFontScale] = useState<number>(1.0);
   const [theme, setTheme] = useState<'light' | 'dark' | 'sepia'>('light');
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedRangeData, setSelectedRangeData] = useState<{
     text: string;
     blockIds: string[];
@@ -31,6 +33,15 @@ export const ReaderScreen: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    const win = iframeRef.current?.contentWindow as (Window & { find?: (...args: unknown[]) => boolean }) | null;
+    if (win && typeof win.find === 'function') {
+      win.find(searchQuery.trim(), false, false, true, false, true, false);
+    }
+  };
 
   // Load Document and Highlights
   const loadData = () => {
@@ -241,6 +252,18 @@ export const ReaderScreen: React.FC = () => {
 
         {/* Reader Customization Controls */}
         <div className="flex items-center space-x-2">
+          {/* Search in Document */}
+          <form onSubmit={handleSearch} className="relative flex items-center">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Find text..."
+              className="pl-7 pr-2 py-1 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-green-500 w-28 sm:w-36 transition"
+            />
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 pointer-events-none" />
+          </form>
+
           {/* Font Resizing */}
           <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200 text-xs font-semibold">
             <button

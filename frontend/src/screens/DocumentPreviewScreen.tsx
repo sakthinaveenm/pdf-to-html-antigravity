@@ -19,7 +19,25 @@ export const DocumentPreviewScreen: React.FC = () => {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [qualityReport, setQualityReport] = useState<QualityReport | null>(null);
   const [activeTab, setActiveTab] = useState<'preview' | 'source' | 'quality'>('preview');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState(true);
+  const htmlIframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  const totalPages = docMeta?.pageCount || 1;
+
+  const goToPage = (page: number) => {
+    const targetPage = Math.max(1, Math.min(totalPages, page));
+    setCurrentPage(targetPage);
+
+    // Synchronize HTML view by scrolling to matching section
+    const iframe = htmlIframeRef.current;
+    if (iframe && iframe.contentDocument) {
+      const section = iframe.contentDocument.querySelector(`section[data-page="${targetPage}"]`);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   useEffect(() => {
     if (!documentId) return;
@@ -98,15 +116,41 @@ export const DocumentPreviewScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Synchronized Navigation Bar */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600">
+        <span className="font-medium text-gray-700">Synchronized Page Navigation</span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="px-2.5 py-1 rounded bg-white border border-gray-200 hover:bg-gray-100 disabled:opacity-40 font-semibold"
+          >
+            ← Prev
+          </button>
+          <span className="font-semibold text-gray-800">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className="px-2.5 py-1 rounded bg-white border border-gray-200 hover:bg-gray-100 disabled:opacity-40 font-semibold"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+
       {/* Side-by-Side Main Container */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Original PDF Viewer */}
         <div className="w-1/2 border-r border-gray-200 flex flex-col bg-gray-100">
-          <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Original Source PDF
+          <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider flex justify-between items-center">
+            <span>Original Source PDF</span>
+            <span className="text-[11px] text-gray-400">PDF Viewport</span>
           </div>
           <iframe
-            src={`${pdfUrl}#toolbar=0`}
+            key={`pdf-p${currentPage}`}
+            src={`${pdfUrl}#page=${currentPage}&toolbar=0`}
             title="Original PDF"
             className="w-full flex-1 border-0"
           />
@@ -165,6 +209,7 @@ export const DocumentPreviewScreen: React.FC = () => {
           <div className="flex-1 overflow-auto p-6">
             {activeTab === 'preview' && (
               <iframe
+                ref={htmlIframeRef}
                 srcDoc={htmlContent}
                 title="Converted HTML Preview"
                 className="w-full h-full border-0 rounded"

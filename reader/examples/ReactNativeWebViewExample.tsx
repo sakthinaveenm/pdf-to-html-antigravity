@@ -92,6 +92,20 @@ export const MultilingualDocReader: React.FC<ReaderProps> = ({
           break;
         }
 
+        case 'HIGHLIGHT_UPDATED': {
+          const updated = data.payload as HighlightPayload;
+          setHighlights((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+          break;
+        }
+
+        case 'SEARCH_RESULT': {
+          const { query, found } = data.payload as { query: string; found: boolean };
+          if (!found) {
+            Alert.alert('Search', `No matches found for "${query}"`);
+          }
+          break;
+        }
+
         case 'LINK_CLICKED': {
           const { href } = data.payload as { href: string; text: string };
           Alert.alert('External Link', `Open ${href} in default browser?`, [

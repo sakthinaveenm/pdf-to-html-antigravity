@@ -14,6 +14,7 @@ export type ReaderToNativeMessageType =
   | 'HIGHLIGHT_UPDATED'
   | 'LINK_CLICKED'
   | 'FONT_SIZE_CHANGED'
+  | 'SEARCH_RESULT'
   | 'READER_ERROR';
 
 export type NativeToReaderMessageType =
@@ -21,8 +22,11 @@ export type NativeToReaderMessageType =
   | 'SET_FONT_SIZE'
   | 'SET_THEME'
   | 'APPLY_HIGHLIGHT'
+  | 'UPDATE_HIGHLIGHT'
   | 'REMOVE_HIGHLIGHT'
-  | 'SEARCH_QUERY';
+  | 'SEARCH_QUERY'
+  | 'SCROLL_TO_PAGE'
+  | 'RESTORE_HIGHLIGHTS';
 
 export interface TextQuoteAnchor {
   exact: string;

@@ -279,6 +279,37 @@
         }
         break;
 
+      case 'UPDATE_HIGHLIGHT':
+        if (msg.payload && msg.payload.id) {
+          const item = activeHighlights.get(msg.payload.id);
+          if (item && item.markElements) {
+            item.markElements.forEach(m => {
+              if (msg.payload.color) m.style.backgroundColor = msg.payload.color;
+            });
+          }
+          postToNative('HIGHLIGHT_UPDATED', msg.payload);
+        }
+        break;
+
+      case 'SEARCH_QUERY':
+        if (msg.payload && typeof msg.payload.query === 'string') {
+          const query = msg.payload.query.trim();
+          if (query && window.find) {
+            const found = window.find(query, false, false, true, false, true, false);
+            postToNative('SEARCH_RESULT', { query: query, found: Boolean(found) });
+          }
+        }
+        break;
+
+      case 'SCROLL_TO_PAGE':
+        if (msg.payload && msg.payload.pageNumber) {
+          const sec = document.querySelector(`section[data-page="${msg.payload.pageNumber}"]`);
+          if (sec) {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+        break;
+
       case 'RESTORE_HIGHLIGHTS':
         if (msg.payload && Array.isArray(msg.payload.highlights)) {
           restoreHighlights(msg.payload.highlights);
