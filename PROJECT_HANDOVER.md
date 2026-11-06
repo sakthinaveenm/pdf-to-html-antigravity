@@ -121,20 +121,19 @@ Located in `backend/app/services/annotations/highlight_service.py` & `reader/src
 
 ### Frontend Web Application (React 18 / TypeScript / TailwindCSS)
 Located in `frontend/src/`:
-- **Dashboard (`DashboardScreen.tsx`)**: Real-time server health, active engines, system capabilities, memory stats, and recent jobs.
-- **Batch Upload (`UploadScreen.tsx`)**: Drag-and-drop multiple PDFs, engine override selector (`AUTO`, `NATIVE_HYBRID`, `DOCLING`, `MARKER`), and target OCR language picker.
-- **Queue Monitor (`QueueScreen.tsx`)**: Real-time progress bar ($0\text{--}100\%$), active stage badge, retry failed jobs, and cancel running jobs.
-- **Side-by-Side Preview (`DocumentPreviewScreen.tsx`)**: Split-screen comparing original PDF (page-by-page) with rendered HTML, synchronized page navigation, and quality score badges.
-- **TipTap Rich Text Editor (`EditorScreen.tsx`)**:
-  - Full WYSIWYG editing of headings, paragraphs, lists, tables, and images.
-  - Strict preservation of `data-block-id` and page boundaries.
-  - Version history saving with new document revisions.
-- **Reader & Annotation Studio (`ReaderScreen.tsx`)**:
-  - Interactive text selection with floating 5-color highlight toolbar.
-  - Full-text search with highlighting and occurrence counting.
-  - Typography controls: font size scaling (A- / A+), light/dark/sepia themes.
-  - Mobile preview toggle: Simulates an iPhone 15 frame directly in the browser.
-- **Export Center (`ExportScreen.tsx`)**: Single-click offline ZIP download with standalone HTML and assets.
+- **Single-Screen Studio (`SingleScreenWorkspace.tsx`)**:
+  - Unified single-page studio layout eliminating page fragmentation and routing hops.
+  - **Header Bar (`WorkspaceHeader.tsx`)**: Global document switcher dropdown, active processing queue counter, hardware specs badge, and "+ Upload PDF" trigger.
+  - **Collapsible Sidebar (`Sidebar.tsx`)**:
+    - **Documents Tab (`SidebarDocuments.tsx`)**: Searchable list of all converted documents with language badges, page counts, revision numbers, and 1-click permanent deletion.
+    - **Queue Tab (`SidebarQueue.tsx`)**: Real-time progress bars (0-100%), pipeline stage labels (OCR, Normalization, etc.), cancel, retry, and delete actions.
+    - **Upload Tab (`SidebarUpload.tsx`)**: Drag-and-drop dropzone, universal Document Language selector (Auto, Presets, Custom BCP-47), OCR Language selector (Auto, 125+ searchable list, custom code input), and engine selector.
+  - **Main Studio Viewport (`DocumentWorkspace.tsx`)**:
+    - **Split View (`SplitPreviewView.tsx`)**: Synchronized side-by-side view with original PDF viewport on left and semantic HTML output on right with page navigation and view source mode.
+    - **Editor (`EditorView.tsx`)**: TipTap WYSIWYG visual editor and raw HTML source editor with versioned revision saving.
+    - **Reader (`ReaderView.tsx`)**: Distraction-free reader with Light/Dark/Sepia themes, font scaling (80%-160%), mobile view simulator, in-page search, and text highlighter with annotation manager.
+    - **Export (`ExportView.tsx`)**: 1-click downloads for Offline Bundle ZIP, Standalone HTML5, Canonical JSON AST, and Quality Report.
+- **Legacy Standalone Screens**: Preserved in `frontend/src/screens/` for backward compatibility.
 
 ---
 
