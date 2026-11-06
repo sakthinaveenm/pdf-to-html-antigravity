@@ -242,7 +242,7 @@ export const DocumentPreviewScreen: React.FC = () => {
             {activeTab === 'preview' && (
               <iframe
                 ref={htmlIframeRef}
-                srcDoc={htmlContent}
+                srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"/><base href="${window.location.origin}/"/></head><body>${htmlContent}</body></html>`}
                 title="Converted HTML Preview"
                 className="w-full h-full border-0 rounded"
                 sandbox="allow-same-origin"

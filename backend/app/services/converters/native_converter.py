@@ -20,7 +20,7 @@ from backend.app.schemas.canonical import (
 from backend.app.services.converters.base import PDFConverter, ConversionOptions, ConverterCapabilities
 from backend.app.services.ocr.tesseract_service import ocr_service
 from backend.app.services.ocr.legacy_indic_decoder import (
-    decode_chanakya_to_unicode, is_legacy_indic_font, detect_legacy_indic_text
+    decode_chanakya_to_unicode, is_legacy_indic_font, detect_legacy_indic_text, is_latin_font
 )
 from backend.app.constants.statuses import PageClassification
 from backend.app.constants.languages import (
@@ -173,14 +173,40 @@ class NativeHybridConverter(PDFConverter):
                     t_headers: List[TableCell] = []
                     t_rows: List[TableRow] = []
 
-                    extracted_data = table.extract()
-                    if extracted_data and len(extracted_data) > 0:
-                        first_row = extracted_data[0]
-                        for cell_text in first_row:
-                            t_headers.append(TableCell(content=str(cell_text or "").strip(), is_header=True))
-                        for r in extracted_data[1:]:
-                            cells = [TableCell(content=str(c or "").strip(), is_header=False) for c in r]
+                    if hasattr(table, "rows") and table.rows:
+                        # Extract with high accuracy using page text clipping on cell bounding boxes
+                        first_row = table.rows[0]
+                        for c_bbox in first_row.cells:
+                            c_raw = page.get_text("text", clip=c_bbox).strip() if c_bbox else ""
+                            if is_legacy_indic or detect_legacy_indic_text(c_raw)[0]:
+                                c_raw = decode_chanakya_to_unicode(c_raw)
+                            t_headers.append(TableCell(content=c_raw, is_header=True))
+
+                        for r in table.rows[1:]:
+                            cells = []
+                            for c_bbox in r.cells:
+                                c_raw = page.get_text("text", clip=c_bbox).strip() if c_bbox else ""
+                                if is_legacy_indic or detect_legacy_indic_text(c_raw)[0]:
+                                    c_raw = decode_chanakya_to_unicode(c_raw)
+                                cells.append(TableCell(content=c_raw, is_header=False))
                             t_rows.append(TableRow(cells=cells))
+                    else:
+                        extracted_data = table.extract()
+                        if extracted_data and len(extracted_data) > 0:
+                            first_row = extracted_data[0]
+                            for cell_text in first_row:
+                                txt = str(cell_text or "").strip()
+                                if is_legacy_indic or detect_legacy_indic_text(txt)[0]:
+                                    txt = decode_chanakya_to_unicode(txt)
+                                t_headers.append(TableCell(content=txt, is_header=True))
+                            for r in extracted_data[1:]:
+                                cells = []
+                                for c in r:
+                                    txt = str(c or "").strip()
+                                    if is_legacy_indic or detect_legacy_indic_text(txt)[0]:
+                                        txt = decode_chanakya_to_unicode(txt)
+                                    cells.append(TableCell(content=txt, is_header=False))
+                                t_rows.append(TableRow(cells=cells))
 
                     reading_order_counter += 1
                     block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, "table")
@@ -368,7 +394,13 @@ class NativeHybridConverter(PDFConverter):
                             span_text = span.get("text", "")
                             if not span_text:
                                 continue
-                            if is_legacy_indic:
+                            span_font = span.get("font", "").lower()
+                            span_is_latin = is_latin_font(span_font)
+                            
+                            # Decode legacy Indic fonts; preserve authentic Latin/English fonts
+                            if (is_legacy_indic_font(span_font)
+                                or (is_legacy_indic and not span_is_latin)
+                                or detect_legacy_indic_text(span_text)[0]):
                                 span_text = decode_chanakya_to_unicode(span_text)
                             
                             span_len = len(span_text)

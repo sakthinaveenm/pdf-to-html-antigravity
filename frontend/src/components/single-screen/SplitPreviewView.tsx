@@ -197,11 +197,12 @@ export const SplitPreviewView: React.FC<SplitPreviewViewProps> = ({
       ::selection { background: #bbf7d0; color: #166534; }
     `;
 
+    const baseOrigin = typeof window !== 'undefined' ? window.location.origin : '';
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
-  <base href="/" />
+  <base href="${baseOrigin}/" />
   <style>${readerCss}</style>
 </head>
 <body>

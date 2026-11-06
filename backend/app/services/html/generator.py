@@ -496,11 +496,12 @@ class HTMLGenerationService:
             page_folder = pages_root / f"{p_num:04d}"
             page_folder.mkdir(parents=True, exist_ok=True)
 
-            # 1. Editor-Ready Paste HTML snippet
+            # 1. Editor-Ready Paste HTML snippet (embeds self-contained base64 images for seamless external editor paste)
             paste_html = self.generate_page_snippet(
                 doc,
                 p_num,
                 asset_base_url=asset_base_url,
+                embed_images_base64=True,
                 assets_dir=assets_dir
             )
             (page_folder / "paste.html").write_text(paste_html, encoding="utf-8")

@@ -153,7 +153,7 @@ def get_document_quality(document_id: str):
     
     return json.loads(q_file.read_text(encoding="utf-8"))
 
-@router.get("/{document_id}/pdf")
+@router.api_route("/{document_id}/pdf", methods=["GET", "HEAD"])
 def get_original_pdf(document_id: str):
     pdf_path = settings.ORIGINALS_DIR / f"{document_id}.pdf"
     if not pdf_path.exists():
@@ -162,7 +162,8 @@ def get_original_pdf(document_id: str):
     return FileResponse(
         path=pdf_path,
         media_type="application/pdf",
-        filename=f"{document_id}.pdf"
+        filename=f"{document_id}.pdf",
+        content_disposition_type="inline"
     )
 
 # =========================================================================
@@ -508,7 +509,7 @@ def save_revision(document_id: str, data: DocumentRevisionCreate, db: Session = 
         createdAt=rev_record.created_at
     )
 
-@router.get("/{document_id}/assets/{asset_filename}")
+@router.api_route("/{document_id}/assets/{asset_filename}", methods=["GET", "HEAD"])
 def get_document_asset(document_id: str, asset_filename: str):
     asset_path = settings.DOCUMENTS_DIR / document_id / "assets" / asset_filename
     if not asset_path.exists():

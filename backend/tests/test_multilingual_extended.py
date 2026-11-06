@@ -127,7 +127,21 @@ def test_legacy_indic_font_detection_and_decoding():
     assert "साझेदारी" in decoded_title
     assert "लेखांकन" in decoded_title
 
+    decoded_book = decode_chanakya_to_unicode("ys[kk'kkL=k lk>snkjh [kkrs d{kk 12 osQ fy, ikB~;iqLrd")
+    assert "लेखाशास्त्र" in decoded_book
+    assert "साझेदारी खाते" in decoded_book
+    assert "कक्षा 12 के लिए पाठ्यपुस्तक" in decoded_book
+
     decoded_terms = decode_chanakya_to_unicode("vk/kjHkwr vo/kj.kk,¡")
-    assert "आधारभूत" in decoded_terms or "आध्ारभूत" in decoded_terms
+    assert "आधारभूत" in decoded_terms
+    assert "अवधारणाएँ" in decoded_terms
+
+    # 4. Complex ligatures, pre-base matras and rephs
+    assert decode_chanakya_to_unicode("ekpZ") == "मार्च"
+    assert decode_chanakya_to_unicode("dkfrZd") == "कार्तिक"
+    assert "बाहर" in decode_chanakya_to_unicode("ckgj osQ thou")
+    assert "चाहिए" in decode_chanakya_to_unicode("pkfg,A")
+    assert "शिक्षा" in decode_chanakya_to_unicode("f'k{kk uhfr")
+    assert "विलेख" in decode_chanakya_to_unicode("foys[k")
 
 
