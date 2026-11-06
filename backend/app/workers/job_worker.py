@@ -209,16 +209,22 @@ class JobProcessor:
                 doc_record.title = canonical_doc.title
                 doc_record.quality_status = quality_report.overallStatus
 
-            # Add initial revision 1
-            rev_record = DocumentRevision(
-                id=f"rev-{doc_id}-001",
-                document_id=doc_id,
-                revision_number=1,
-                html_content=normalized_html,
-                ast_json=canonical_doc.model_dump_json(),
-                change_summary="Initial conversion from PDF"
-            )
-            db.add(rev_record)
+            # Add or update initial revision 1
+            rev_record = db.query(DocumentRevision).filter(DocumentRevision.id == f"rev-{doc_id}-001").first()
+            if not rev_record:
+                rev_record = DocumentRevision(
+                    id=f"rev-{doc_id}-001",
+                    document_id=doc_id,
+                    revision_number=1,
+                    html_content=normalized_html,
+                    ast_json=canonical_doc.model_dump_json(),
+                    change_summary="Initial conversion from PDF"
+                )
+                db.add(rev_record)
+            else:
+                rev_record.html_content = normalized_html
+                rev_record.ast_json = canonical_doc.model_dump_json()
+                rev_record.change_summary = "Re-converted from PDF"
 
             # Mark Completed
             job.status = JobStatus.COMPLETED.value

@@ -310,8 +310,17 @@ class HTMLGenerationService:
                 if block.imageData.caption else ''
             )
             fig_style = ' style="margin: 1.5rem 0; text-align: center;"'
-            img_style = ' style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;"'
-            return f'<figure id="{b_id}" data-block-id="{b_id}"{fig_style}>\n  <img src="{img_src}" alt="{img_alt}" loading="lazy"{img_style} />\n  {caption_html}\n</figure>'
+            
+            w = block.imageData.width
+            h = block.imageData.height
+            if w and w < 600:
+                img_style = f' style="width: {w}px; max-width: 100%; height: auto; border-radius: 4px; display: inline-block;"'
+                dim_attrs = f' width="{w}"' + (f' height="{h}"' if h else '')
+            else:
+                img_style = ' style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;"'
+                dim_attrs = ''
+
+            return f'<figure id="{b_id}" data-block-id="{b_id}"{fig_style}>\n  <img src="{img_src}" alt="{img_alt}" loading="lazy"{dim_attrs}{img_style} />\n  {caption_html}\n</figure>'
 
         elif block.blockType == "equation":
             formula = html.escape(block.mathFormula or block.content)

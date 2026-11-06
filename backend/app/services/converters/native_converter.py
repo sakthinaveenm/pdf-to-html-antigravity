@@ -121,8 +121,23 @@ class NativeHybridConverter(PDFConverter):
             page = doc[p_idx]
             rect = page.rect
             text_raw = page.get_text("text") or ""
-            images_on_page = page.get_images(full=True)
-            image_count = len(images_on_page)
+            # Inspect images and filter out 1-bit stencil and background watermark masks
+            raw_image_infos = page.get_image_info(xrefs=True)
+            real_image_infos = []
+            for info in raw_image_infos:
+                bpc = info.get("bpc", 8)
+                cs = info.get("cs-name", "")
+                bbox = info.get("bbox", [0, 0, 0, 0])
+                w_pt = bbox[2] - bbox[0]
+                h_pt = bbox[3] - bbox[1]
+                if bpc == 1 and cs == "DeviceGray":
+                    continue
+                if (w_pt >= rect.width * 0.85 and h_pt >= rect.height * 0.85) or (bbox[0] < 0 and bbox[1] < 0):
+                    continue
+                if w_pt < 15 or h_pt < 15:
+                    continue
+                real_image_infos.append(info)
+            image_count = len(real_image_infos)
 
             # Check for legacy non-Unicode Indic fonts or text (Chanakya, KrutiDev, etc.)
             page_fonts = [f[3] for f in page.get_fonts() if len(f) > 3]
@@ -163,6 +178,8 @@ class NativeHybridConverter(PDFConverter):
                 fontsDetected=page_fonts,
                 wordCount=page_words
             ))
+
+            page_blocks: List[DocumentBlock] = []
 
             # 1. Extract Tables on this page
             table_bboxes = []
@@ -208,13 +225,12 @@ class NativeHybridConverter(PDFConverter):
                                     cells.append(TableCell(content=txt, is_header=False))
                                 t_rows.append(TableRow(cells=cells))
 
-                    reading_order_counter += 1
-                    block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, "table")
-                    all_blocks.append(DocumentBlock(
+                    block_id = DocumentBlock.generate_block_id(page_num, len(page_blocks) + 1, "table")
+                    page_blocks.append(DocumentBlock(
                         blockId=block_id,
                         blockType="table",
                         sourcePage=page_num,
-                        readingOrder=reading_order_counter,
+                        readingOrder=0,
                         provenance=BlockProvenance(engine="native", page=page_num, bbox=list(table.bbox)),
                         tableData=TableData(headers=t_headers, rows=t_rows)
                     ))
@@ -225,10 +241,16 @@ class NativeHybridConverter(PDFConverter):
                     page=page_num
                 ))
 
-            # 2. Extract Embedded Images
-            for img_idx, img_info in enumerate(images_on_page):
+            # 2. Extract Real Content Images
+            for img_idx, img_info in enumerate(real_image_infos):
                 try:
-                    xref = img_info[0]
+                    xref = img_info.get("xref", 0)
+                    if xref <= 0:
+                        continue
+                    img_bbox = list(img_info.get("bbox", [0, 0, 0, 0]))
+                    w_pt = img_bbox[2] - img_bbox[0]
+                    h_pt = img_bbox[3] - img_bbox[1]
+
                     base_image = doc.extract_image(xref)
                     if base_image:
                         image_bytes = base_image["image"]
@@ -238,6 +260,9 @@ class NativeHybridConverter(PDFConverter):
                         asset_path = options.assets_dir / asset_filename
                         asset_path.write_bytes(image_bytes)
 
+                        rendered_w = max(1, round(w_pt))
+                        rendered_h = max(1, round(h_pt))
+
                         asset_meta = AssetMetadata(
                             assetId=asset_id,
                             fileName=asset_filename,
@@ -245,29 +270,26 @@ class NativeHybridConverter(PDFConverter):
                             relativePath=f"assets/{asset_filename}",
                             byteSize=len(image_bytes),
                             page=page_num,
-                            width=base_image.get("width"),
-                            height=base_image.get("height")
+                            width=rendered_w,
+                            height=rendered_h
                         )
                         assets_dict[asset_id] = asset_meta
 
-                        # Add image block only if significant size (> 30x30 px to skip 1px lines/spacers)
-                        if (base_image.get("width", 0) > 30 and base_image.get("height", 0) > 30):
-                            reading_order_counter += 1
-                            block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, asset_id)
-                            all_blocks.append(DocumentBlock(
-                                blockId=block_id,
-                                blockType="image",
-                                sourcePage=page_num,
-                                readingOrder=reading_order_counter,
-                                provenance=BlockProvenance(engine="native", page=page_num),
-                                imageData=ImageData(
-                                    asset_id=asset_id,
-                                    src=f"/api/v1/documents/{options.document_id}/assets/{asset_filename}" if options.document_id else f"./assets/{asset_filename}",
-                                    alt=f"Figure on page {page_num}",
-                                    width=base_image.get("width"),
-                                    height=base_image.get("height")
-                                )
-                            ))
+                        block_id = DocumentBlock.generate_block_id(page_num, len(page_blocks) + 1, asset_id)
+                        page_blocks.append(DocumentBlock(
+                            blockId=block_id,
+                            blockType="image",
+                            sourcePage=page_num,
+                            readingOrder=0,
+                            provenance=BlockProvenance(engine="native", page=page_num, bbox=img_bbox),
+                            imageData=ImageData(
+                                asset_id=asset_id,
+                                src=f"/api/v1/documents/{options.document_id}/assets/{asset_filename}" if options.document_id else f"./assets/{asset_filename}",
+                                alt=f"Figure on page {page_num}",
+                                width=rendered_w,
+                                height=rendered_h
+                            )
+                        ))
                 except Exception as e:
                     warnings.append(DocumentWarning(
                         code="IMAGE_EXTRACTION_ERROR",
@@ -298,19 +320,18 @@ class NativeHybridConverter(PDFConverter):
                 if ocr_text:
                     paragraphs = [p.strip() for p in ocr_text.split("\n\n") if p.strip()]
                     for p_text in paragraphs:
-                        reading_order_counter += 1
-                        block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, p_text)
+                        block_id = DocumentBlock.generate_block_id(page_num, len(page_blocks) + 1, p_text)
                         script = detect_script_from_text(p_text)
                         direction = get_direction_for_script(script)
                         ocr_font_stack = get_font_stack_for_script(script)
-                        all_blocks.append(DocumentBlock(
+                        page_blocks.append(DocumentBlock(
                             blockId=block_id,
                             blockType="paragraph",
                             sourcePage=page_num,
                             language=script,
                             direction=direction,
                             content=p_text,
-                            readingOrder=reading_order_counter,
+                            readingOrder=0,
                             provenance=BlockProvenance(engine="ocr", page=page_num, confidence=ocr_res.confidence),
                             style=BlockStyle(
                                 fontFamily=ocr_font_stack,
@@ -329,17 +350,16 @@ class NativeHybridConverter(PDFConverter):
                     decoded_text = decode_chanakya_to_unicode(text_raw)
                     paragraphs = [p.strip() for p in decoded_text.split("\n\n") if p.strip()]
                     for p_text in paragraphs:
-                        reading_order_counter += 1
-                        block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, p_text)
+                        block_id = DocumentBlock.generate_block_id(page_num, len(page_blocks) + 1, p_text)
                         indic_font_stack = get_font_stack_for_script("devanagari")
-                        all_blocks.append(DocumentBlock(
+                        page_blocks.append(DocumentBlock(
                             blockId=block_id,
                             blockType="paragraph",
                             sourcePage=page_num,
-                            language="devanagari",
+                            language=script if (script := detect_script_from_text(p_text)) else "devanagari",
                             direction="ltr",
                             content=p_text,
-                            readingOrder=reading_order_counter,
+                            readingOrder=0,
                             provenance=BlockProvenance(engine="legacy_indic_decoder", page=page_num, confidence=0.92),
                             style=BlockStyle(
                                 fontFamily=indic_font_stack,
@@ -504,10 +524,9 @@ class NativeHybridConverter(PDFConverter):
                         marginBottom="0.5em" if block_type == "heading" else "0.75em"
                     )
 
-                    reading_order_counter += 1
-                    block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, full_text)
+                    block_id = DocumentBlock.generate_block_id(page_num, len(page_blocks) + 1, full_text)
                     
-                    all_blocks.append(DocumentBlock(
+                    page_blocks.append(DocumentBlock(
                         blockId=block_id,
                         blockType=block_type,
                         sourcePage=page_num,
@@ -515,12 +534,23 @@ class NativeHybridConverter(PDFConverter):
                         direction=direction,
                         content=full_text,
                         inlineFormatting=inline_formats,
-                        readingOrder=reading_order_counter,
+                        readingOrder=0,
                         provenance=BlockProvenance(engine="native", page=page_num, bbox=list(bbox)),
                         level=level,
                         mathFormula=full_text if block_type == "equation" else None,
                         style=block_style
                     ))
+
+            # Sort all elements on this page by vertical reading order (top to bottom, then left to right)
+            page_blocks.sort(key=lambda b: (
+                round(b.provenance.bbox[1], -1) if (b.provenance and b.provenance.bbox and len(b.provenance.bbox) >= 2) else 0,
+                b.provenance.bbox[0] if (b.provenance and b.provenance.bbox and len(b.provenance.bbox) >= 1) else 0
+            ))
+
+            for pb in page_blocks:
+                reading_order_counter += 1
+                pb.readingOrder = reading_order_counter
+                all_blocks.append(pb)
 
             # Insert page break block between pages
             if page_num < total_pages:
