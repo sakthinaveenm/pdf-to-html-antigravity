@@ -226,3 +226,4 @@ def test_semantic_html_generation_arbitrary_language_and_rtl():
     custom_html = html_generation_service.generate_html(custom_doc, standalone=True)
     assert '<html lang="sr-Latn" dir="ltr">' in custom_html
     assert '<article class="canonical-document" lang="sr-Latn" dir="ltr"' in custom_html
+

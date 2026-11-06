@@ -10,6 +10,7 @@ import {
   FileText,
   AlertCircle,
   Download,
+  Trash2,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Job } from '../types';
@@ -47,6 +48,25 @@ export const QueueScreen: React.FC = () => {
       fetchJobs();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDeleteJob = async (job: Job) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${job.filename}" and any associated files?`
+    );
+    if (!confirmed) return;
+
+    try {
+      if (job.documentId) {
+        await api.deleteDocument(job.documentId);
+      } else {
+        await api.deleteJob(job.id);
+      }
+      setJobs((prev) => prev.filter((j) => j.id !== job.id));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete.';
+      alert(msg);
     }
   };
 
@@ -212,6 +232,15 @@ export const QueueScreen: React.FC = () => {
                             </Link>
                           </>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteJob(job)}
+                          className="inline-flex items-center px-2 py-1 text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" />
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   );

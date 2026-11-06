@@ -6,16 +6,21 @@ original PDF streaming, revision saves, asset streaming, and ZIP exports.
 import json
 import uuid
 import re
+import shutil
 from pathlib import Path
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Response
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from bs4 import BeautifulSoup
 
 from backend.app.db.database import get_db
-from backend.app.models.entities import Document, DocumentRevision
-from backend.app.schemas.document import DocumentResponse, DocumentRevisionCreate, DocumentRevisionResponse
+from backend.app.models.entities import Document, DocumentRevision, Highlight, Job
+from backend.app.schemas.document import (
+    DocumentResponse, DocumentRevisionCreate, DocumentRevisionResponse,
+    DocumentListResponse, DocumentDeleteResponse
+)
 from backend.app.schemas.capabilities import QualityReport
 from backend.app.config.settings import settings
 from backend.app.services.html.normalizer import html_normalization_service
@@ -23,6 +28,70 @@ from backend.app.services.annotations.highlight_service import annotation_servic
 from backend.app.services.export.export_service import export_service
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
+
+@router.get("", response_model=DocumentListResponse)
+def list_documents(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Document)
+    total = query.count()
+    records = query.order_by(desc(Document.created_at)).offset((page - 1) * limit).limit(limit).all()
+
+    items = []
+    for doc in records:
+        meta_dict = json.loads(doc.metadata_json) if doc.metadata_json else {}
+        items.append(DocumentResponse(
+            id=doc.id,
+            jobId=doc.job_id,
+            title=doc.title,
+            filename=doc.filename,
+            sha256=doc.sha256,
+            language=doc.language,
+            pageCount=doc.page_count,
+            currentRevision=doc.current_revision,
+            qualityStatus=doc.quality_status,
+            createdAt=doc.created_at,
+            updatedAt=doc.updated_at,
+            metadata=meta_dict
+        ))
+
+    return DocumentListResponse(total=total, items=items)
+
+@router.delete("/{document_id}", response_model=DocumentDeleteResponse)
+def delete_document(document_id: str, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    doc_title = doc.title
+
+    # 1. Delete associated jobs
+    db.query(Job).filter(Job.document_id == document_id).delete(synchronize_session=False)
+
+    # 2. Delete associated highlights and revisions
+    db.query(Highlight).filter(Highlight.document_id == document_id).delete(synchronize_session=False)
+    db.query(DocumentRevision).filter(DocumentRevision.document_id == document_id).delete(synchronize_session=False)
+
+    # 3. Delete Document record
+    db.delete(doc)
+    db.commit()
+
+    # 4. Clean up disk files
+    doc_dir = settings.DOCUMENTS_DIR / document_id
+    if doc_dir.exists():
+        shutil.rmtree(doc_dir, ignore_errors=True)
+
+    pdf_path = settings.ORIGINALS_DIR / f"{document_id}.pdf"
+    if pdf_path.exists():
+        pdf_path.unlink(missing_ok=True)
+
+    return DocumentDeleteResponse(
+        status="deleted",
+        documentId=document_id,
+        message=f"Document '{doc_title}' and all associated assets deleted successfully."
+    )
 
 @router.get("/{document_id}", response_model=DocumentResponse)
 def get_document_metadata(document_id: str, db: Session = Depends(get_db)):

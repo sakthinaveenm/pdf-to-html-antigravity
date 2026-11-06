@@ -4,6 +4,7 @@ Supports batch PDF uploads, pagination, progress polling, cancellation, and retr
 """
 import uuid
 import hashlib
+import shutil
 from typing import List, Optional
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
@@ -11,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from backend.app.db.database import get_db
-from backend.app.models.entities import Job
+from backend.app.models.entities import Job, Document, DocumentRevision, Highlight
 from backend.app.schemas.job import JobResponse, JobListResponse, BatchUploadResponse
 from backend.app.config.settings import settings
 from backend.app.constants.statuses import JobStatus
@@ -186,4 +187,34 @@ def retry_job(job_id: str, db: Session = Depends(get_db)):
     record.error_message = None
     db.commit()
     return {"status": JobStatus.QUEUED.value, "message": "Job queued for retry."}
+
+@router.delete("/{job_id}")
+def delete_job(job_id: str, db: Session = Depends(get_db)):
+    record = db.query(Job).filter(Job.id == job_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Job not found.")
+
+    doc_id = record.document_id
+
+    # If associated Document exists, delete document and its files
+    if doc_id:
+        doc = db.query(Document).filter(Document.id == doc_id).first()
+        if doc:
+            db.query(Highlight).filter(Highlight.document_id == doc_id).delete(synchronize_session=False)
+            db.query(DocumentRevision).filter(DocumentRevision.document_id == doc_id).delete(synchronize_session=False)
+            db.delete(doc)
+
+        doc_dir = settings.DOCUMENTS_DIR / doc_id
+        if doc_dir.exists():
+            shutil.rmtree(doc_dir, ignore_errors=True)
+
+    # Delete original file
+    file_path = Path(record.file_path)
+    if file_path.exists():
+        file_path.unlink(missing_ok=True)
+
+    db.delete(record)
+    db.commit()
+
+    return {"status": "deleted", "jobId": job_id, "message": "Job and associated data deleted successfully."}
 

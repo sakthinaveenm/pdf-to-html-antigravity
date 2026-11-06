@@ -41,10 +41,17 @@ export const api = {
   getJob: async (jobId: string): Promise<Job> => (await apiClient.get(`/jobs/${jobId}`)).data,
   cancelJob: async (jobId: string) => (await apiClient.post(`/jobs/${jobId}/cancel`)).data,
   retryJob: async (jobId: string) => (await apiClient.post(`/jobs/${jobId}/retry`)).data,
+  deleteJob: async (jobId: string) => (await apiClient.delete(`/jobs/${jobId}`)).data,
 
   // Documents
+  listDocuments: async (page = 1, limit = 20): Promise<{ total: number; items: DocumentMeta[] }> =>
+    (await apiClient.get('/documents', { params: { page, limit } })).data,
+
   getDocument: async (documentId: string): Promise<DocumentMeta> =>
     (await apiClient.get(`/documents/${documentId}`)).data,
+
+  deleteDocument: async (documentId: string) =>
+    (await apiClient.delete(`/documents/${documentId}`)).data,
 
   getDocumentHtml: async (documentId: string): Promise<string> =>
     (await apiClient.get(`/documents/${documentId}/html`)).data,

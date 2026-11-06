@@ -110,3 +110,50 @@ def test_batch_upload_and_pipeline(client):
     assert export_res.headers["content-type"] == "application/zip"
     assert len(export_res.content) > 100
 
+    # Test List Documents
+    doc_list_res = client.get("/api/v1/documents")
+    assert doc_list_res.status_code == 200
+    docs_data = doc_list_res.json()
+    assert docs_data["total"] >= 1
+    assert any(d["id"] == doc_id for d in docs_data["items"])
+
+    # Test Delete Document
+    del_res = client.delete(f"/api/v1/documents/{doc_id}")
+    assert del_res.status_code == 200
+    del_data = del_res.json()
+    assert del_data["status"] == "deleted"
+    assert del_data["documentId"] == doc_id
+
+    # Verify Document is no longer retrievable
+    get_del = client.get(f"/api/v1/documents/{doc_id}")
+    assert get_del.status_code == 404
+
+    # Verify associated HTML is gone
+    get_html_del = client.get(f"/api/v1/documents/{doc_id}/html")
+    assert get_html_del.status_code == 404
+
+def test_delete_nonexistent_document(client):
+    res = client.delete("/api/v1/documents/non-existent-doc-id-12345")
+    assert res.status_code == 404
+
+def test_delete_job(client):
+    # Create a job
+    pdf_path = Path("samples/sample_english.pdf")
+    with open(pdf_path, "rb") as f:
+        res = client.post(
+            "/api/v1/jobs",
+            files={"files": ("sample_english.pdf", f, "application/pdf")},
+            data={"converter": "NATIVE", "ocr_languages": "eng"}
+        )
+    job_id = res.json()["jobs"][0]["id"]
+    
+    # Delete job
+    del_res = client.delete(f"/api/v1/jobs/{job_id}")
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "deleted"
+
+    # Verify job is gone
+    get_res = client.get(f"/api/v1/jobs/{job_id}")
+    assert get_res.status_code == 404
+
+

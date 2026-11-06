@@ -1,7 +1,7 @@
 """
 Pydantic schemas for Document metadata, revisions, and responses.
 """
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -21,6 +21,15 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class DocumentListResponse(BaseModel):
+    total: int
+    items: List[DocumentResponse]
+
+class DocumentDeleteResponse(BaseModel):
+    status: str
+    documentId: str
+    message: str
 
 class DocumentRevisionCreate(BaseModel):
     html: str

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
   Code,
@@ -9,19 +9,40 @@ import {
   Download,
   AlertTriangle,
   CheckCircle,
+  Trash2,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DocumentMeta, QualityReport } from '../types';
 
 export const DocumentPreviewScreen: React.FC = () => {
   const { documentId } = useParams<{ documentId: string }>();
+  const navigate = useNavigate();
   const [docMeta, setDocMeta] = useState<DocumentMeta | null>(null);
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [qualityReport, setQualityReport] = useState<QualityReport | null>(null);
   const [activeTab, setActiveTab] = useState<'preview' | 'source' | 'quality'>('preview');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const htmlIframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  const handleDeleteDocument = async () => {
+    if (!documentId || !docMeta) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${docMeta.title}"?\n\nThis will remove the document, its semantic HTML, highlights, revisions, and original PDF from disk.`
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await api.deleteDocument(documentId);
+      navigate('/');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete document.';
+      alert(msg);
+      setDeleting(false);
+    }
+  };
 
   const totalPages = docMeta?.pageCount || 1;
 
@@ -114,6 +135,16 @@ export const DocumentPreviewScreen: React.FC = () => {
             <Download className="w-3.5 h-3.5 mr-1" />
             Export ZIP
           </Link>
+          <button
+            type="button"
+            onClick={handleDeleteDocument}
+            disabled={deleting}
+            className="inline-flex items-center px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-medium hover:bg-red-50 shadow-sm transition disabled:opacity-50"
+            title="Permanently Delete Document"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
         </div>
       </div>
 

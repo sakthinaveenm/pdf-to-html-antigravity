@@ -12,6 +12,7 @@ import {
   Edit,
   BookOpen,
   Download,
+  Trash2,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Job, SystemCapabilities } from '../types';
@@ -20,6 +21,25 @@ export const DashboardScreen: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [caps, setCaps] = useState<SystemCapabilities | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteJob = async (job: Job) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${job.filename}" and its associated files?`
+    );
+    if (!confirmed) return;
+
+    try {
+      if (job.documentId) {
+        await api.deleteDocument(job.documentId);
+      } else {
+        await api.deleteJob(job.id);
+      }
+      setJobs((prev) => prev.filter((j) => j.id !== job.id));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete.';
+      alert(msg);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -209,6 +229,14 @@ export const DashboardScreen: React.FC = () => {
                           </Link>
                         </>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteJob(job)}
+                        className="inline-flex items-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        title="Delete Document"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
