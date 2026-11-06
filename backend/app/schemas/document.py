@@ -42,3 +42,19 @@ class DocumentRevisionResponse(BaseModel):
     changeSummary: str
     createdAt: datetime
 
+class PageSnippetResponse(BaseModel):
+    documentId: str
+    pageNumber: int
+    html: str
+    plainText: str
+    isCorrected: bool = False
+    fontsDetected: List[str] = []
+    detectedScript: Optional[str] = None
+    wordCount: int = 0
+    warnings: List[str] = []
+
+class PageSnippetUpdateRequest(BaseModel):
+    html: str
+    changeSummary: Optional[str] = "Manual developer correction"
+
+

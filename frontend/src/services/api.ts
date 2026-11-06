@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Job, DocumentMeta, Highlight, QualityReport, SystemCapabilities } from '../types';
+import { Job, DocumentMeta, Highlight, QualityReport, SystemCapabilities, PageSnippet } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -64,6 +64,38 @@ export const api = {
 
   saveRevision: async (documentId: string, html: string, changeSummary = 'Edited in HTML editor') =>
     (await apiClient.put(`/documents/${documentId}/revisions`, { html, changeSummary })).data,
+
+  // Page-by-Page Book Conversion & Snippet Endpoints
+  getPageSnippet: async (
+    documentId: string,
+    pageNumber: number,
+    assetBaseUrl?: string,
+    embedImages = false
+  ): Promise<PageSnippet> => {
+    const params: Record<string, unknown> = {};
+    if (assetBaseUrl) params.asset_base_url = assetBaseUrl;
+    if (embedImages) params.embed_images = true;
+    return (await apiClient.get(`/documents/${documentId}/pages/${pageNumber}/snippet`, { params })).data;
+  },
+
+  updatePageSnippet: async (
+    documentId: string,
+    pageNumber: number,
+    html: string
+  ): Promise<PageSnippet> =>
+    (await apiClient.put(`/documents/${documentId}/pages/${pageNumber}/snippet`, { html })).data,
+
+  resetPageSnippet: async (
+    documentId: string,
+    pageNumber: number
+  ): Promise<PageSnippet> =>
+    (await apiClient.post(`/documents/${documentId}/pages/${pageNumber}/reset`)).data,
+
+  getPageStandaloneUrl: (documentId: string, pageNumber: number) =>
+    `${API_BASE}/documents/${documentId}/pages/${pageNumber}/standalone`,
+
+  getPageExportUrl: (documentId: string, pageNumber: number, format: 'paste' | 'standalone' = 'paste') =>
+    `${API_BASE}/documents/${documentId}/pages/${pageNumber}/export?format=${format}`,
 
   // Highlights
   listHighlights: async (documentId: string): Promise<Highlight[]> =>

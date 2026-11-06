@@ -44,6 +44,19 @@ class BlockProvenance(BaseModel):
     confidence: Optional[float] = None
     bbox: Optional[List[float]] = None  # [x0, y0, x1, y1] normalized or pts
 
+class BlockStyle(BaseModel):
+    fontFamily: Optional[str] = None
+    fontSize: Optional[float] = None
+    fontWeight: Optional[str] = None      # 'bold', 'normal', '600', '700'
+    fontStyle: Optional[str] = None       # 'italic', 'normal'
+    color: Optional[str] = None           # hex e.g. '#1f2937'
+    textAlign: Optional[str] = None       # 'left', 'center', 'right', 'justify'
+    lineHeight: Optional[float] = None
+    marginTop: Optional[str] = None
+    marginBottom: Optional[str] = None
+    textIndent: Optional[str] = None
+    backgroundColor: Optional[str] = None
+
 class DocumentBlock(BaseModel):
     blockId: str              # Deterministic identifier, e.g. 'blk-p1-s001-a1b2'
     blockType: str            # heading, paragraph, list, listItem, table, image, caption, blockquote, equation, code, pageBreak
@@ -58,6 +71,7 @@ class DocumentBlock(BaseModel):
     tableData: Optional[TableData] = None  # For table blocks
     imageData: Optional[ImageData] = None  # For image blocks
     mathFormula: Optional[str] = None     # For equation blocks (LaTeX/MathML)
+    style: Optional[BlockStyle] = None    # Visual typography & formatting for editor-ready inline CSS
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
@@ -78,6 +92,9 @@ class PageMetadata(BaseModel):
     textConfidence: Optional[float] = None
     hasImages: bool = False
     imageCount: int = 0
+    fontsDetected: List[str] = Field(default_factory=list)
+    wordCount: int = 0
+    blockCount: int = 0
 
 class AssetMetadata(BaseModel):
     assetId: str

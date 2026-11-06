@@ -161,11 +161,14 @@ class JobProcessor:
 
             quality_report = quality_service.evaluate(canonical_doc, normalized_html)
 
-            # 5. Save Files to Storage
+            # 5. Save Files to Storage (full document + per-page bundles)
             (doc_dir / "document.html").write_text(normalized_html, encoding="utf-8")
             (doc_dir / "reader.css").write_text(reader_css, encoding="utf-8")
             (doc_dir / "document.json").write_text(canonical_doc.model_dump_json(indent=2), encoding="utf-8")
             (doc_dir / "quality-report.json").write_text(quality_report.model_dump_json(indent=2), encoding="utf-8")
+            
+            # Generate individual page deliverables (pages/0001/paste.html, etc.)
+            html_generation_service.generate_all_pages_bundle(canonical_doc, doc_dir)
             
             metadata = {
                 "documentId": doc_id,

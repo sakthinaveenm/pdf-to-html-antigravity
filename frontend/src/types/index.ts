@@ -32,6 +32,18 @@ export interface DocumentMeta {
   metadata?: Record<string, unknown>;
 }
 
+export interface PageSnippet {
+  documentId: string;
+  pageNumber: number;
+  html: string;
+  plainText: string;
+  isCorrected: boolean;
+  fontsDetected: string[];
+  detectedScript?: string;
+  wordCount: number;
+  warnings: string[];
+}
+
 export interface TextQuote {
   exact: string;
   prefix: string;

@@ -61,3 +61,4 @@ export const POPULAR_OCR_LANGS: OcrLanguageOption[] = [
   { code: 'deu', name: 'German' },
   { code: 'spa', name: 'Spanish' },
 ];
+

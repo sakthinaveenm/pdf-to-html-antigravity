@@ -36,15 +36,24 @@ class ExportService:
             if ast_file.exists():
                 zf.write(ast_file, arcname="document.json")
 
-            # Add metadata.json
+            # Add metadata.json and book.json
             meta_file = doc_dir / "metadata.json"
             if meta_file.exists():
                 zf.write(meta_file, arcname="metadata.json")
+                zf.write(meta_file, arcname="book.json")
 
             # Add quality-report.json
             quality_file = doc_dir / "quality-report.json"
             if quality_file.exists():
                 zf.write(quality_file, arcname="quality-report.json")
+
+            # Add all individual page files (pages/0001/paste.html, etc.)
+            pages_dir = doc_dir / "pages"
+            if pages_dir.exists():
+                for p_file in pages_dir.rglob("*"):
+                    if p_file.is_file():
+                        rel = p_file.relative_to(doc_dir)
+                        zf.write(p_file, arcname=str(rel))
 
             # Add all assets
             assets_dir = doc_dir / "assets"
@@ -52,6 +61,7 @@ class ExportService:
                 for asset in assets_dir.glob("*"):
                     if asset.is_file():
                         zf.write(asset, arcname=f"assets/{asset.name}")
+                        zf.write(asset, arcname=f"shared-assets/{asset.name}")
 
         return zip_path
 

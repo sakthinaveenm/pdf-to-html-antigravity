@@ -34,12 +34,21 @@ This document provides a comprehensive handover of everything designed, implemen
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary: Core Purpose & Workflow
 
-The **Multilingual PDF to HTML Converter** is a production-grade, local-first platform designed to convert complex multilingual PDFs into clean, semantic, editable, and selectable HTML.
+This platform is a **Multilingual PDF Book to Page-by-Page HTML Converter** engineered for developers digitizing educational textbooks for insertion into the **UEducate** application.
 
-### Fundamental Principle
-The generated HTML contains **real DOM text nodes** (`<p>`, `<h1>`–`<h6>`, `<table>`, `<ul>`, `<mark>`, `<code>`), **never** full-page raster screenshots, canvas-only hacks, or thousands of absolute-positioned spans. Text can be natively selected, searched, highlighted, copied, edited, and rendered smoothly inside React web applications, TipTap editors, React Native WebViews, and mobile eBook readers.
+### The Problem It Solves
+Previously, textbook digitization required developers to manually read each PDF textbook page, manually recreate its layout and formatting in an HTML editor, and save it for student consumption via Web and mobile WebViews. This manual process was slow and error-prone.
+
+### Core Objective
+**Automate the PDF-to-HTML conversion process while preserving the original page formatting and producing real selectable, editable HTML text.**
+
+- **Every PDF page generates its own HTML snippet**: A 150-page textbook produces 150 independent, formatted page snippets.
+- **Copy Formatted Content with 1-Click**: Developers click "Copy Formatted Content" to place rich `text/html` clipboard data with inline CSS directly onto the system clipboard, then press `Ctrl+V` / `Cmd+V` in the UEducate editor to paste formatting that survives editor sanitization.
+- **Copy HTML Source**: Plain text markup fragment `<section data-page="N">...</section>` for source code paste.
+- **Real Selectable DOM Text**: Zero page rasterization or canvas hacks. Students can select text, highlight, search, and take notes in UEducate Web and React Native WebViews.
+- **Local-First & Multi-Script**: Zero external paid APIs. Complete Unicode preservation across Tamil, Hindi, Telugu, Kannada, Malayalam, Bengali, Arabic RTL, CJK, and English.
 
 ---
 

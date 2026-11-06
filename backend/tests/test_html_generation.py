@@ -59,7 +59,7 @@ def test_generate_semantic_html(sample_canonical_doc):
 
     assert "<!DOCTYPE html>" in html_output
     assert '<article class="canonical-document"' in html_output
-    assert '<section data-page="1">' in html_output
+    assert '<section data-page="1"' in html_output
     assert '<h1 id="blk-p1-s001-a1b2" data-block-id="blk-p1-s001-a1b2"' in html_output
     assert "தமிழ் இலக்கியம்" in html_output
     assert '<p id="blk-p1-s002-c3d4" data-block-id="blk-p1-s002-c3d4"' in html_output
