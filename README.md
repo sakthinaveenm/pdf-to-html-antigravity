@@ -11,6 +11,10 @@ Built for seamless integration into:
 
 > **Core Architectural Guarantee**: The generated HTML strictly consists of real DOM text nodes (`<p>`, `<h1>`–`<h6>`, `<table>`, `<ul>`, `<ol>`, `<figure>`, `<blockquote>`, `<code>`, `<math>`). It never uses canvas rendering, SVG text glyph hacks, or full-page screenshot wrappers as primary text output.
 
+> [!TIP]
+> **Continuing on another machine or first-time setup?**  
+> Read the complete [Project Handover & Run Guide (PROJECT_HANDOVER.md)](file:///Users/kpost/Desktop/Projects/pdf-to-html-antigravity/PROJECT_HANDOVER.md) for full project status, architecture breakdown, and one-command run instructions.
+
 ---
 
 ## Key Features
