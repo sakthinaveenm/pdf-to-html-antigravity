@@ -1,7 +1,7 @@
 """
 Database setup for local SQLite storage with WAL mode enabled.
 """
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from backend.app.config.settings import settings
 
@@ -31,4 +31,11 @@ def get_db() -> Session:
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Ensure backward-compatible column migration
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE jobs ADD COLUMN document_language VARCHAR(64) DEFAULT 'AUTO'"))
+            conn.commit()
+        except Exception:
+            pass
 

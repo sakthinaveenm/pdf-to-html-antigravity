@@ -23,12 +23,14 @@ async def create_jobs(
     files: List[UploadFile] = File(...),
     converter: str = Form("AUTO"),
     ocr_languages: str = Form("eng+tam+hin"),
+    document_language: str = Form("AUTO"),
     force_ocr: bool = Form(False),
     db: Session = Depends(get_db)
 ):
     """
     Batch upload multiple PDF files and queue them for conversion.
     Each file receives an independent job ID and document ID.
+    Supports ANY OCR language and ANY document language.
     """
     if not files:
         raise HTTPException(status_code=400, detail="No files provided.")
@@ -65,6 +67,7 @@ async def create_jobs(
             status=JobStatus.QUEUED.value,
             converter=converter.upper(),
             ocr_languages=ocr_languages,
+            document_language=document_language,
             force_ocr=force_ocr,
             progress=0,
             current_step="Queued"
@@ -82,6 +85,7 @@ async def create_jobs(
             status=job_record.status,
             converter=job_record.converter,
             ocrLanguages=job_record.ocr_languages,
+            documentLanguage=job_record.document_language or "AUTO",
             forceOcr=job_record.force_ocr,
             progress=job_record.progress,
             currentStep=job_record.current_step,
@@ -117,6 +121,7 @@ def list_jobs(
             status=r.status,
             converter=r.converter,
             ocrLanguages=r.ocr_languages,
+            documentLanguage=r.document_language or "AUTO",
             forceOcr=r.force_ocr,
             progress=r.progress,
             currentStep=r.current_step,
@@ -145,6 +150,7 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
         status=record.status,
         converter=record.converter,
         ocrLanguages=record.ocr_languages,
+        documentLanguage=record.document_language or "AUTO",
         forceOcr=record.force_ocr,
         progress=record.progress,
         currentStep=record.current_step,

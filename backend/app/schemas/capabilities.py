@@ -65,6 +65,7 @@ class SystemCapabilities(BaseModel):
     recommendedDevice: str
     defaultWorkers: int
     installedOcrLanguages: List[str]
+    languageDetails: List[Dict[str, Any]] = Field(default_factory=list)
     converters: List[ConverterInfo]
     defaultConverter: str
 

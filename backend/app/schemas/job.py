@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 
 class JobCreateOptions(BaseModel):
     converter: str = "AUTO"             # AUTO, MARKER, DOCLING, NATIVE
-    ocr_languages: str = "eng+tam+hin"  # Multi-language string
+    ocr_languages: str = "eng+tam+hin"  # Multi-language string or AUTO
+    document_language: Optional[str] = "AUTO"  # Any BCP-47 tag, ISO code or AUTO
     force_ocr: bool = False
     max_pages: Optional[int] = None
 
@@ -20,6 +21,7 @@ class JobResponse(BaseModel):
     status: str
     converter: str
     ocrLanguages: str
+    documentLanguage: Optional[str] = "AUTO"
     forceOcr: bool
     progress: int
     currentStep: str

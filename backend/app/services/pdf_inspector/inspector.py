@@ -10,7 +10,10 @@ from typing import List, Dict, Any, Tuple
 import pymupdf as fitz
 from pydantic import BaseModel
 from backend.app.constants.statuses import PageClassification
-from backend.app.constants.languages import detect_script_from_text, TARGET_LANGUAGES
+from backend.app.constants.languages import (
+    detect_script_from_text, TARGET_LANGUAGES, SCRIPT_TO_TESSERACT,
+    get_tesseract_langs_for_scripts
+)
 from backend.app.services.ocr.legacy_indic_decoder import is_legacy_indic_font, detect_legacy_indic_text
 
 class PageInspection(BaseModel):
@@ -234,25 +237,8 @@ class PDFInspectionService:
         else:
             recommended_conv = "AUTO"
 
-        # Recommended OCR languages
-        ocr_langs = ["eng"]
-        for s in detected_scripts:
-            if s == "tamil":
-                ocr_langs.append("tam")
-            elif s == "devanagari":
-                ocr_langs.append("hin")
-            elif s == "telugu":
-                ocr_langs.append("tel")
-            elif s == "malayalam":
-                ocr_langs.append("mal")
-            elif s == "kannada":
-                ocr_langs.append("kan")
-            elif s == "bengali":
-                ocr_langs.append("ben")
-            elif s == "arabic":
-                ocr_langs.append("ara")
-            elif s == "cjk":
-                ocr_langs.append("chi_sim")
+        # Recommended OCR languages dynamically determined from all world scripts
+        ocr_langs = get_tesseract_langs_for_scripts(list(detected_scripts)).split("+")
 
         return DocumentInspectionReport(
             is_valid_pdf=True,

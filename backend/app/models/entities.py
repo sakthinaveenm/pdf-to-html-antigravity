@@ -22,7 +22,8 @@ class Job(Base):
     
     status = Column(String(32), nullable=False, default="QUEUED", index=True)
     converter = Column(String(32), nullable=False, default="AUTO")
-    ocr_languages = Column(String(128), nullable=False, default="eng")
+    ocr_languages = Column(String(512), nullable=False, default="eng")
+    document_language = Column(String(64), nullable=True, default="AUTO")
     force_ocr = Column(Boolean, nullable=False, default=False)
     
     progress = Column(Integer, nullable=False, default=0)
@@ -41,7 +42,7 @@ class Document(Base):
     title = Column(String(512), nullable=False, default="Untitled Document")
     filename = Column(String(255), nullable=False)
     sha256 = Column(String(64), nullable=False, index=True)
-    language = Column(String(16), nullable=False, default="en")
+    language = Column(String(64), nullable=False, default="en")
     page_count = Column(Integer, nullable=False, default=1)
     current_revision = Column(Integer, nullable=False, default=1)
     quality_status = Column(String(32), nullable=False, default="PASS")

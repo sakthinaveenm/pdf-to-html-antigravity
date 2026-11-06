@@ -7,6 +7,7 @@ and offline reader stylesheets.
 from typing import List, Dict, Any, Optional
 import html
 from backend.app.schemas.canonical import CanonicalDocument, DocumentBlock
+from backend.app.constants.languages import is_rtl
 
 READER_CSS = """
 /* Responsive Offline Reader Stylesheet */
@@ -17,7 +18,7 @@ READER_CSS = """
   --border-color: #e5e7eb;
   --highlight-yellow: #fff3a8;
   --font-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-indic: "Tamil Sangam MN", "Devanagari Sangam MN", "Noto Sans", sans-serif;
+  --font-multilingual: "Noto Sans", "Noto Serif", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Thai", "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", "Tamil Sangam MN", "Devanagari Sangam MN", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -42,11 +43,26 @@ body {
   padding: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-base), var(--font-indic);
+  font-family: var(--font-base), var(--font-multilingual);
   font-size: 16px;
   line-height: 1.65;
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+/* Right-To-Left (RTL) layout support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] section[data-page]::after {
+  text-align: left;
+}
+
+[dir="rtl"] ul, [dir="rtl"] ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
 }
 
 .document-container {
@@ -226,7 +242,9 @@ class HTMLGenerationService:
             pages_dict[page].append(block)
 
         body_parts: List[str] = []
-        body_parts.append(f'<article class="canonical-document" lang="{html.escape(doc.language)}" data-document-id="{html.escape(doc.documentId)}">')
+        doc_lang = html.escape(doc.language or "en")
+        doc_dir = "rtl" if is_rtl(doc.language) else "ltr"
+        body_parts.append(f'<article class="canonical-document" lang="{doc_lang}" dir="{doc_dir}" data-document-id="{html.escape(doc.documentId)}">')
 
         sorted_pages = sorted(pages_dict.keys())
         if not sorted_pages:
@@ -312,7 +330,7 @@ class HTMLGenerationService:
         doc_lang = html.escape(doc.language or "en")
 
         return f"""<!DOCTYPE html>
-<html lang="{doc_lang}">
+<html lang="{doc_lang}" dir="{doc_dir}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

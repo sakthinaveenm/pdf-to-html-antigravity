@@ -10,6 +10,7 @@ from backend.app.schemas.canonical import CanonicalDocument
 class ConversionOptions(BaseModel):
     document_id: str
     ocr_languages: str = "eng"
+    document_language: Optional[str] = "AUTO"
     force_ocr: bool = False
     max_pages: Optional[int] = None
     assets_dir: Path

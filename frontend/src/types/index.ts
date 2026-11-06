@@ -7,6 +7,7 @@ export interface Job {
   status: 'QUEUED' | 'INSPECTING' | 'CONVERTING' | 'OCR_PROCESSING' | 'NORMALIZING' | 'VALIDATING' | 'COMPLETED' | 'FAILED' | 'CANCELED';
   converter: string;
   ocrLanguages: string;
+  documentLanguage?: string;
   forceOcr: boolean;
   progress: number;
   currentStep: string;
@@ -82,6 +83,12 @@ export interface ConverterInfo {
   description: string;
 }
 
+export interface LanguageDetail {
+  code: string;
+  name: string;
+  installed: boolean;
+}
+
 export interface SystemCapabilities {
   platform: string;
   cpuCount: number;
@@ -92,6 +99,7 @@ export interface SystemCapabilities {
   recommendedDevice: string;
   defaultWorkers: number;
   installedOcrLanguages: string[];
+  languageDetails?: LanguageDetail[];
   converters: ConverterInfo[];
   defaultConverter: string;
 }

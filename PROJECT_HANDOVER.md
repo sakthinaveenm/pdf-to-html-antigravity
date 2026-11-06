@@ -91,16 +91,20 @@ Located in `backend/app/services/converters/`:
 
 ---
 
-### Multilingual & Script Support
-Supports **19 target languages**:
-- **Indic**: Tamil, Hindi, Telugu, Malayalam, Kannada, Bengali, Marathi, Gujarati, Punjabi, Sanskrit.
-- **Semitic (RTL)**: Arabic, Urdu (with visual-to-logical order inversion, text shaping, and automatic `dir="rtl"` tagging).
-- **East Asian (CJK)**: Simplified Chinese, Traditional Chinese, Japanese, Korean.
-- **European**: English, French, German, Spanish.
-- **Features**:
-  - Zero corruption of Unicode combining marks and Indic vowel signs (e.g., `க் + ஷ = க்ஷ`, `ஸ்ரீ`).
-  - Mixed LTR/RTL bidirectional paragraph handling.
-  - Automatic OCR language pack mapping based on user selection or auto-detected scripts.
+### Multilingual & Universal Script Support (ANY Language & ANY OCR Code)
+- **Universal Document Language**:
+  - Automatically identifies dominant script across the entire Unicode space: Latin, Cyrillic, Greek, Hebrew, Arabic, Syriac, Thaana, Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, Malayalam, Sinhala, Thai, Lao, Tibetan, Myanmar, Georgian, Armenian, Ethiopic, Khmer, CJK (Chinese, Japanese Kanji), Hiragana, Katakana, and Hangul.
+  - Automatically embeds appropriate BCP-47 / ISO tags and `dir="rtl"` attributes at document and paragraph levels.
+  - Allows users to specify **ANY custom BCP-47 / ISO language code** (e.g. `ru-RU`, `el`, `sr-Latn`, `he-IL`, `th`, `fa-IR`, `vi`, `de-AT`, etc.).
+- **Universal OCR Language Support**:
+  - Dynamically exposes all **125+ installed Tesseract OCR languages** with native names and searchable filtering.
+  - Allows **ANY arbitrary OCR language string or combination** (e.g. `rus+eng`, `vie+fra`, `tha+eng`, `heb+ara`, or custom `.traineddata` packages).
+  - Includes an **Auto-Detect OCR Mode** that inspects PDF text/fonts and activates corresponding OCR language packs automatically.
+- **Legacy Indic Non-Unicode Font Decoding**:
+  - Dedicated Walkman-Chanakya, DevLys, and KrutiDev decoders mapping legacy 8-bit ASCII character encodings directly into modern Devanagari Unicode.
+- **Zero Corruption**:
+  - Complete preservation of Unicode combining marks and Indic vowel signs (e.g., `க் + ஷ = க்ஷ`, `ஸ்ரீ`).
+  - Mixed LTR/RTL bidirectional paragraph handling with logical order normalization.
 
 ---
 

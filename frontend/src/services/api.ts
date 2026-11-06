@@ -17,12 +17,14 @@ export const api = {
     files: File[],
     converter: string,
     ocrLanguages: string,
-    forceOcr: boolean
+    forceOcr: boolean,
+    documentLanguage = 'AUTO'
   ): Promise<{ jobs: Job[] }> => {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
     formData.append('converter', converter);
     formData.append('ocr_languages', ocrLanguages);
+    formData.append('document_language', documentLanguage);
     formData.append('force_ocr', String(forceOcr));
 
     return (await apiClient.post('/jobs', formData, {

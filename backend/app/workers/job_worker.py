@@ -114,9 +114,11 @@ class JobProcessor:
             revisions_dir = doc_dir / "revisions"
             revisions_dir.mkdir(parents=True, exist_ok=True)
 
+            doc_lang = getattr(job, "document_language", None) or "AUTO"
             options = ConversionOptions(
                 document_id=doc_id,
                 ocr_languages=job.ocr_languages,
+                document_language=doc_lang,
                 force_ocr=job.force_ocr,
                 assets_dir=assets_dir
             )

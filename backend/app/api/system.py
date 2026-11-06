@@ -8,6 +8,7 @@ from backend.app.config.settings import settings
 from backend.app.schemas.capabilities import SystemCapabilities, ConverterInfo
 from backend.app.services.ocr.tesseract_service import ocr_service
 from backend.app.services.converters.orchestrator import conversion_orchestrator
+from backend.app.constants.languages import TESSERACT_LANG_NAMES
 
 router = APIRouter(tags=["System"])
 
@@ -35,6 +36,15 @@ def get_capabilities():
         for cap in conv_caps.values()
     ]
 
+    lang_details = [
+        {
+            "code": code,
+            "name": TESSERACT_LANG_NAMES.get(code, code),
+            "installed": True
+        }
+        for code in installed_langs
+    ]
+
     return SystemCapabilities(
         platform=hw["platform"],
         cpuCount=hw["cpu_count"],
@@ -45,6 +55,7 @@ def get_capabilities():
         recommendedDevice=hw["recommended_device"],
         defaultWorkers=hw["default_workers"],
         installedOcrLanguages=installed_langs,
+        languageDetails=lang_details,
         converters=converters_info,
         defaultConverter=settings.DEFAULT_CONVERTER
     )

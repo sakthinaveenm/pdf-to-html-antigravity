@@ -23,7 +23,10 @@ from backend.app.services.ocr.legacy_indic_decoder import (
     decode_chanakya_to_unicode, is_legacy_indic_font, detect_legacy_indic_text
 )
 from backend.app.constants.statuses import PageClassification
-from backend.app.constants.languages import detect_script_from_text, get_direction_for_script
+from backend.app.constants.languages import (
+    detect_script_from_text, get_direction_for_script, resolve_document_language,
+    get_tesseract_langs_for_scripts, is_rtl
+)
 
 class NativeHybridConverter(PDFConverter):
     def check_availability(self) -> bool:
@@ -207,14 +210,21 @@ class NativeHybridConverter(PDFConverter):
 
             # 3. Process Text Content
             if is_scanned:
-                # If page is legacy Indic or user requested Devanagari, ensure OCR runs with Hindi
+                # If OCR languages is AUTO or empty, dynamically detect or fallback
                 ocr_langs = options.ocr_languages
-                if is_legacy_indic and "hin" not in ocr_langs:
-                    ocr_langs = f"hin+{ocr_langs}" if ocr_langs else "hin+eng"
+                if not ocr_langs or ocr_langs.strip().upper() == "AUTO":
+                    if is_legacy_indic:
+                        ocr_langs = "hin+eng"
+                    elif page_script and page_script != "latin":
+                        ocr_langs = get_tesseract_langs_for_scripts([page_script])
+                    else:
+                        ocr_langs = "eng"
+                elif is_legacy_indic and "hin" not in ocr_langs:
+                    ocr_langs = f"hin+{ocr_langs}"
 
                 pix = page.get_pixmap(dpi=300)
                 img = Image.open(io.BytesIO(pix.tobytes("png")))
-                ocr_res = ocr_service.ocr_image(img, languages=ocr_langs)
+                ocr_res = ocr_service.ocr_image(img, languages=ocr_langs, detected_scripts=[page_script])
                 
                 ocr_text = ocr_res.text.strip() if ocr_res.text else ""
                 
@@ -396,16 +406,30 @@ class NativeHybridConverter(PDFConverter):
         if not title or title.strip() == "":
             title = source_path.stem
 
+        # Determine overall dominant script across all content blocks
+        script_counts: Dict[str, int] = {}
+        for b in all_blocks:
+            if b.language and b.language != "latin":
+                script_counts[b.language] = script_counts.get(b.language, 0) + 1
+        
+        dominant_script = (
+            max(script_counts.items(), key=lambda x: x[1])[0]
+            if script_counts
+            else (pages_meta[0].detectedScript if pages_meta else "latin")
+        )
+
+        resolved_lang = resolve_document_language(options.document_language, dominant_script)
+
         return CanonicalDocument(
             documentId=options.document_id,
             sourceFileName=source_path.name,
             sourceChecksum=doc_sha,
             title=title,
-            language=pages_meta[0].detectedScript if pages_meta else "en",
+            language=resolved_lang,
             revision=1,
             pages=pages_meta,
             blocks=all_blocks,
             assets=assets_dict,
-            metadata={"total_blocks": len(all_blocks), "median_font_size": median_font_size},
+            metadata={"total_blocks": len(all_blocks), "median_font_size": median_font_size, "dominant_script": dominant_script},
             warnings=warnings
         )

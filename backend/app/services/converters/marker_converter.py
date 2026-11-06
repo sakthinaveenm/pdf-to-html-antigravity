@@ -14,7 +14,9 @@ from backend.app.schemas.canonical import (
     AssetMetadata, TableData, TableRow, TableCell, DocumentWarning
 )
 from backend.app.services.converters.base import PDFConverter, ConversionOptions, ConverterCapabilities
-from backend.app.constants.languages import detect_script_from_text, get_direction_for_script
+from backend.app.constants.languages import (
+    detect_script_from_text, get_direction_for_script, resolve_document_language
+)
 
 class MarkerConverter(PDFConverter):
     def __init__(self):
@@ -151,17 +153,30 @@ class MarkerConverter(PDFConverter):
                     provenance=BlockProvenance(engine="marker", page=1)
                 ))
 
+        # Determine overall dominant script across all content blocks
+        script_counts: Dict[str, int] = {}
+        for b in all_blocks:
+            if b.language and b.language != "latin":
+                script_counts[b.language] = script_counts.get(b.language, 0) + 1
+        
+        dominant_script = (
+            max(script_counts.items(), key=lambda x: x[1])[0]
+            if script_counts
+            else (pages_meta[0].detectedScript if pages_meta else "latin")
+        )
+        resolved_lang = resolve_document_language(options.document_language, dominant_script)
+
         return CanonicalDocument(
             documentId=options.document_id,
             sourceFileName=source_path.name,
             sourceChecksum=doc_sha,
             title=source_path.stem,
-            language="en",
+            language=resolved_lang,
             revision=1,
             pages=pages_meta,
             blocks=all_blocks,
             assets=assets_dict,
-            metadata={"engine": "marker", "total_blocks": len(all_blocks)},
+            metadata={"engine": "marker", "total_blocks": len(all_blocks), "dominant_script": dominant_script},
             warnings=[]
         )
 

@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import pytesseract
 from PIL import Image, ImageOps, ImageFilter
 from backend.app.config.settings import settings
-from backend.app.constants.languages import get_direction_for_script, RTL_LANGUAGES
+from backend.app.constants.languages import get_direction_for_script, is_rtl, get_tesseract_langs_for_scripts, RTL_LANGUAGES
 
 class OCRResult:
     def __init__(self, text: str, confidence: float, direction: str, language: str):
@@ -38,11 +38,21 @@ class OCRService:
     def get_installed_languages(self) -> List[str]:
         return self._installed_languages
 
-    def validate_languages(self, requested_langs: str) -> Tuple[str, List[str]]:
+    def validate_languages(self, requested_langs: str, detected_scripts: Optional[List[str]] = None) -> Tuple[str, List[str]]:
         """
         Validate requested languages against installed packs.
+        Supports 'AUTO' to dynamically select codes based on detected scripts.
+        Accepts ANY valid Tesseract language pack installed.
         Returns (valid_lang_string, missing_languages).
         """
+        if not requested_langs or requested_langs.strip().upper() == "AUTO":
+            if detected_scripts:
+                auto_codes = get_tesseract_langs_for_scripts(detected_scripts).split("+")
+                valid_codes = [c for c in auto_codes if c in self._installed_languages]
+                if valid_codes:
+                    return "+".join(valid_codes), []
+            return "eng", []
+
         raw_codes = [c.strip() for c in requested_langs.replace(",", "+").split("+") if c.strip()]
         valid_codes = []
         missing_codes = []
@@ -74,16 +84,17 @@ class OCRService:
         self,
         image: Image.Image,
         languages: str = "eng",
-        preprocess: bool = True
+        preprocess: bool = True,
+        detected_scripts: Optional[List[str]] = None
     ) -> OCRResult:
         """Execute OCR on a PIL Image with specified languages."""
-        valid_langs, missing = self.validate_languages(languages)
+        valid_langs, missing = self.validate_languages(languages, detected_scripts=detected_scripts)
         
         target_img = self.preprocess_image(image) if preprocess else image
 
         # Determine dominant direction
-        is_rtl = any(c in RTL_LANGUAGES for c in valid_langs.split("+"))
-        direction = "rtl" if is_rtl else "ltr"
+        is_rtl_dir = any(is_rtl(c) for c in valid_langs.split("+"))
+        direction = "rtl" if is_rtl_dir else "ltr"
 
         # Tesseract configuration
         # psm 1: Automatic page segmentation with OSD
