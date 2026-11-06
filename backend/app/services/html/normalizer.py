@@ -65,17 +65,22 @@ class HTMLNormalizationService:
                 elem["data-block-id"] = b_id
                 elem["id"] = b_id
 
-        # Normalize img src attributes to local offline relative paths
+        # Normalize img src attributes
         for img in soup.find_all("img"):
             src = img.get("src", "")
-            if src.startswith("http://localhost") or src.startswith("http://127.0.0.1"):
-                # Strip host and port to keep relative path
+            if src.startswith("/api/v1/documents/"):
+                continue
+            elif src.startswith("http://localhost") or src.startswith("http://127.0.0.1"):
                 if "/assets/" in src:
-                    img["src"] = "./assets/" + src.split("/assets/")[-1]
-            elif not src.startswith("./assets/") and not src.startswith("data:"):
-                filename = src.split("/")[-1]
-                if filename:
-                    img["src"] = f"./assets/{filename}"
+                    asset_file = src.split("/assets/")[-1]
+                    img["src"] = f"/api/v1/documents/{document_id}/assets/{asset_file}" if document_id else f"./assets/{asset_file}"
+            elif src.startswith("./assets/") or src.startswith("assets/"):
+                asset_file = src.split("/")[-1]
+                img["src"] = f"/api/v1/documents/{document_id}/assets/{asset_file}" if document_id else f"./assets/{asset_file}"
+            elif not src.startswith("data:"):
+                asset_file = src.split("/")[-1]
+                if asset_file:
+                    img["src"] = f"/api/v1/documents/{document_id}/assets/{asset_file}" if document_id else f"./assets/{asset_file}"
 
         return str(soup)
 

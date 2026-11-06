@@ -103,3 +103,31 @@ def test_highlight_across_inline_formatting(memory_db):
     # 'Notice: This ' = 13 characters -> 'is very important text' starts at index 13
     assert all_hl[0].position.start == 13
 
+def test_legacy_indic_font_detection_and_decoding():
+    from backend.app.services.ocr.legacy_indic_decoder import (
+        is_legacy_indic_font,
+        detect_legacy_indic_text,
+        decode_chanakya_to_unicode
+    )
+
+    # 1. Font name detection
+    assert is_legacy_indic_font("CODFBD+Walkman-Chanakya905Normal") is True
+    assert is_legacy_indic_font("KrutiDev010") is True
+    assert is_legacy_indic_font("DevLys010Bold") is True
+    assert is_legacy_indic_font("Arial-BoldMT") is False
+
+    # 2. Signature Mojibake detection
+    sample_chanakya = "lk>snkjh ys[kkadu μ vk/kjHkwr vo/kj.kk,¡ vHkh rd vkius ,dy LokfeRo osQ foÙkh; fooj.kksa osQ ckjs esa lh[kk gSA"
+    is_legacy, family = detect_legacy_indic_text(sample_chanakya)
+    assert is_legacy is True
+    assert family == "chanakya"
+
+    # 3. Decoding precision for textbook Hindi terms
+    decoded_title = decode_chanakya_to_unicode("lk>snkjh ys[kkadu")
+    assert "साझेदारी" in decoded_title
+    assert "लेखांकन" in decoded_title
+
+    decoded_terms = decode_chanakya_to_unicode("vk/kjHkwr vo/kj.kk,¡")
+    assert "आधारभूत" in decoded_terms or "आध्ारभूत" in decoded_terms
+
+

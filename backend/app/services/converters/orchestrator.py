@@ -45,6 +45,8 @@ class ConversionOrchestrator:
             # If document is scanned or text encoding problem, Native Hybrid with Tesseract OCR is optimal
             if inspection.overall_classification in (PageClassification.SCANNED_IMAGE, PageClassification.TEXT_ENCODING_PROBLEM):
                 engine_to_use = "NATIVE"
+                if "hin" not in options.ocr_languages and any(p.detected_script == "devanagari" for p in inspection.pages):
+                    options.ocr_languages = f"hin+{options.ocr_languages}" if options.ocr_languages else "hin+eng"
             else:
                 # Digital text: Docling or Native
                 if self.docling_converter.check_availability():

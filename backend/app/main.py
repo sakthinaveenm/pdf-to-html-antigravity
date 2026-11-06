@@ -67,6 +67,10 @@ app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
 app.include_router(highlights_router, prefix=settings.API_V1_PREFIX)
 
+# Static storage file serving
+if settings.STORAGE_DIR.exists():
+    app.mount("/storage", StaticFiles(directory=str(settings.STORAGE_DIR)), name="storage")
+
 @app.get("/")
 def root():
     return {

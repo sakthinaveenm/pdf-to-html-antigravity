@@ -49,7 +49,8 @@ export const DocumentPreviewScreen: React.FC = () => {
     ])
       .then(([meta, html, quality]) => {
         setDocMeta(meta);
-        setHtmlContent(html);
+        const resolvedHtml = html.replace(/src=["'](?:\.\/)?assets\/([^"']+)["']/g, `src="/api/v1/documents/${documentId}/assets/$1"`);
+        setHtmlContent(resolvedHtml);
         setQualityReport(quality);
       })
       .catch((err) => console.error(err))

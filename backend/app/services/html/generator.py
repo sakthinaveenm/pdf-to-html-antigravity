@@ -212,7 +212,7 @@ class HTMLGenerationService:
     def get_reader_css(self) -> str:
         return READER_CSS
 
-    def generate_html(self, doc: CanonicalDocument, standalone: bool = True) -> str:
+    def generate_html(self, doc: CanonicalDocument, standalone: bool = True, **kwargs) -> str:
         """
         Generate semantic HTML from the CanonicalDocument.
         standalone=True wraps inside <html><head><style>...</style></head><body>...</body></html>.
@@ -272,7 +272,13 @@ class HTMLGenerationService:
                     body_parts.append('    </div>')
 
                 elif block.blockType == "image" and block.imageData:
-                    img_src = html.escape(block.imageData.src)
+                    img_raw = block.imageData.src
+                    doc_id_val = getattr(doc, "documentId", None) or getattr(doc, "document_id", None)
+                    if doc_id_val and (img_raw.startswith("./assets/") or img_raw.startswith("assets/")):
+                        asset_file = img_raw.split("/")[-1]
+                        img_src = f"/api/v1/documents/{doc_id_val}/assets/{asset_file}"
+                    else:
+                        img_src = html.escape(img_raw)
                     img_alt = html.escape(block.imageData.alt)
                     caption_html = f'<figcaption>{html.escape(block.imageData.caption)}</figcaption>' if block.imageData.caption else ''
                     body_parts.append(f'    <figure id="{b_id}" data-block-id="{b_id}">')

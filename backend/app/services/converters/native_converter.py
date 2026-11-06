@@ -19,6 +19,9 @@ from backend.app.schemas.canonical import (
 )
 from backend.app.services.converters.base import PDFConverter, ConversionOptions, ConverterCapabilities
 from backend.app.services.ocr.tesseract_service import ocr_service
+from backend.app.services.ocr.legacy_indic_decoder import (
+    decode_chanakya_to_unicode, is_legacy_indic_font, detect_legacy_indic_text
+)
 from backend.app.constants.statuses import PageClassification
 from backend.app.constants.languages import detect_script_from_text, get_direction_for_script
 
@@ -80,16 +83,30 @@ class NativeHybridConverter(PDFConverter):
             images_on_page = page.get_images(full=True)
             image_count = len(images_on_page)
 
+            # Check for legacy non-Unicode Indic fonts or text (Chanakya, KrutiDev, etc.)
+            page_fonts = [f[3] for f in page.get_fonts() if len(f) > 3]
+            has_legacy_indic = any(is_legacy_indic_font(fn) for fn in page_fonts)
+            has_legacy_text, _ = detect_legacy_indic_text(text_raw)
+            is_legacy_indic = has_legacy_indic or has_legacy_text
+
             # Classify page
             char_count = len(text_raw.strip())
-            is_scanned = char_count < 30 and (image_count > 0 or options.force_ocr)
+            is_scanned = (
+                (char_count < 30 and (image_count > 0 or options.force_ocr))
+                or options.force_ocr
+            )
 
-            classification = PageClassification.SCANNED_IMAGE if is_scanned else (
-                PageClassification.MIXED_CONTENT if image_count > 0 else PageClassification.DIGITAL_TEXT
+            classification = (
+                PageClassification.TEXT_ENCODING_PROBLEM if is_legacy_indic
+                else (PageClassification.SCANNED_IMAGE if is_scanned
+                else (PageClassification.MIXED_CONTENT if image_count > 0 else PageClassification.DIGITAL_TEXT))
             )
 
             # Detect dominant script on page
-            page_script = detect_script_from_text(text_raw) if text_raw else "latin"
+            if is_legacy_indic:
+                page_script = "devanagari"
+            else:
+                page_script = detect_script_from_text(text_raw) if text_raw else "latin"
             page_direction = get_direction_for_script(page_script)
 
             pages_meta.append(PageMetadata(
@@ -175,7 +192,7 @@ class NativeHybridConverter(PDFConverter):
                                 provenance=BlockProvenance(engine="native", page=page_num),
                                 imageData=ImageData(
                                     asset_id=asset_id,
-                                    src=f"./assets/{asset_filename}",
+                                    src=f"/api/v1/documents/{options.document_id}/assets/{asset_filename}" if options.document_id else f"./assets/{asset_filename}",
                                     alt=f"Figure on page {page_num}",
                                     width=base_image.get("width"),
                                     height=base_image.get("height")
@@ -190,13 +207,19 @@ class NativeHybridConverter(PDFConverter):
 
             # 3. Process Text Content
             if is_scanned:
-                # Page is scanned or image-only: Render page at 300 DPI and run OCR
+                # If page is legacy Indic or user requested Devanagari, ensure OCR runs with Hindi
+                ocr_langs = options.ocr_languages
+                if is_legacy_indic and "hin" not in ocr_langs:
+                    ocr_langs = f"hin+{ocr_langs}" if ocr_langs else "hin+eng"
+
                 pix = page.get_pixmap(dpi=300)
                 img = Image.open(io.BytesIO(pix.tobytes("png")))
-                ocr_res = ocr_service.ocr_image(img, languages=options.ocr_languages)
+                ocr_res = ocr_service.ocr_image(img, languages=ocr_langs)
                 
-                if ocr_res.text:
-                    paragraphs = [p.strip() for p in ocr_res.text.split("\n\n") if p.strip()]
+                ocr_text = ocr_res.text.strip() if ocr_res.text else ""
+                
+                if ocr_text:
+                    paragraphs = [p.strip() for p in ocr_text.split("\n\n") if p.strip()]
                     for p_text in paragraphs:
                         reading_order_counter += 1
                         block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, p_text)
@@ -211,6 +234,23 @@ class NativeHybridConverter(PDFConverter):
                             content=p_text,
                             readingOrder=reading_order_counter,
                             provenance=BlockProvenance(engine="ocr", page=page_num, confidence=ocr_res.confidence)
+                        ))
+                elif is_legacy_indic and text_raw:
+                    # Fallback to direct Chanakya/KrutiDev decoding of digital text
+                    decoded_text = decode_chanakya_to_unicode(text_raw)
+                    paragraphs = [p.strip() for p in decoded_text.split("\n\n") if p.strip()]
+                    for p_text in paragraphs:
+                        reading_order_counter += 1
+                        block_id = DocumentBlock.generate_block_id(page_num, reading_order_counter, p_text)
+                        all_blocks.append(DocumentBlock(
+                            blockId=block_id,
+                            blockType="paragraph",
+                            sourcePage=page_num,
+                            language="devanagari",
+                            direction="ltr",
+                            content=p_text,
+                            readingOrder=reading_order_counter,
+                            provenance=BlockProvenance(engine="legacy_indic_decoder", page=page_num, confidence=0.92)
                         ))
                 else:
                     warnings.append(DocumentWarning(
@@ -251,6 +291,8 @@ class NativeHybridConverter(PDFConverter):
                             span_text = span.get("text", "")
                             if not span_text:
                                 continue
+                            if is_legacy_indic:
+                                span_text = decode_chanakya_to_unicode(span_text)
                             
                             span_len = len(span_text)
                             span_size = span.get("size", 12.0)

@@ -5,6 +5,7 @@ original PDF streaming, revision saves, asset streaming, and ZIP exports.
 """
 import json
 import uuid
+import re
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -52,7 +53,14 @@ def get_document_html(document_id: str, db: Session = Depends(get_db)):
     if not html_file.exists():
         raise HTTPException(status_code=404, detail="HTML output not found for this document.")
     
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+    raw_html = html_file.read_text(encoding="utf-8")
+    # Dynamically resolve relative asset paths (./assets/...) to API endpoints for web rendering
+    resolved_html = re.sub(
+        r'src=["\'](?:\./)?assets/([^"\']+)["\']',
+        rf'src="/api/v1/documents/{document_id}/assets/\1"',
+        raw_html
+    )
+    return HTMLResponse(content=resolved_html)
 
 @router.get("/{document_id}/ast")
 def get_document_ast(document_id: str):

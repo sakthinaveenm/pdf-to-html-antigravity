@@ -55,9 +55,10 @@ export const EditorScreen: React.FC = () => {
       api.getDocumentHtml(documentId),
     ]).then(([meta, html]) => {
       setDocMeta(meta);
-      setRawSource(html);
+      const resolvedHtml = html.replace(/src=["'](?:\.\/)?assets\/([^"']+)["']/g, `src="/api/v1/documents/${documentId}/assets/$1"`);
+      setRawSource(resolvedHtml);
       if (editor) {
-        editor.commands.setContent(html);
+        editor.commands.setContent(resolvedHtml);
       }
     });
   }, [documentId, editor]);

@@ -11,6 +11,7 @@ import pymupdf as fitz
 from pydantic import BaseModel
 from backend.app.constants.statuses import PageClassification
 from backend.app.constants.languages import detect_script_from_text, TARGET_LANGUAGES
+from backend.app.services.ocr.legacy_indic_decoder import is_legacy_indic_font, detect_legacy_indic_text
 
 class PageInspection(BaseModel):
     page_number: int
@@ -161,13 +162,26 @@ class PDFInspectionService:
             
             image_area_ratio = min(1.0, total_img_area / page_area)
 
+            # Check fonts for legacy non-Unicode Indic fonts (Chanakya, KrutiDev, DevLys, etc.)
+            page_fonts = [f[3] for f in page.get_fonts() if len(f) > 3]
+            has_legacy_indic_font = any(is_legacy_indic_font(fn) for fn in page_fonts)
+            has_legacy_indic_text, _ = detect_legacy_indic_text(text)
+
             # Detect script
             script = detect_script_from_text(text)
+            if has_legacy_indic_font or has_legacy_indic_text:
+                script = "devanagari"
+                suspicious = True
+                page_warnings.append("Legacy non-Unicode Indic font (Walkman-Chanakya / KrutiDev) detected. Restoring Hindi Unicode text via OCR / legacy decoding.")
+
             detected_scripts.add(script)
 
             # Classify page
             classification: PageClassification
-            if suspicious and char_count > 10 and repl_count / max(1, char_count) > 0.15:
+            if has_legacy_indic_font or has_legacy_indic_text:
+                classification = PageClassification.TEXT_ENCODING_PROBLEM
+                encoding_problem_count += 1
+            elif suspicious and char_count > 10 and repl_count / max(1, char_count) > 0.15:
                 classification = PageClassification.TEXT_ENCODING_PROBLEM
                 encoding_problem_count += 1
             elif char_count < 30 and (image_count > 0 or image_area_ratio > 0.5):

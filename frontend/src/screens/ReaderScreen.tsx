@@ -52,7 +52,8 @@ export const ReaderScreen: React.FC = () => {
       api.listHighlights(documentId),
     ]).then(([meta, html, hlList]) => {
       setDocMeta(meta);
-      setHtmlContent(html);
+      const resolvedHtml = html.replace(/src=["'](?:\.\/)?assets\/([^"']+)["']/g, `src="/api/v1/documents/${documentId}/assets/$1"`);
+      setHtmlContent(resolvedHtml);
       setHighlights(hlList);
     });
   };
