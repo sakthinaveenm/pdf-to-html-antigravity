@@ -46,6 +46,29 @@ Optimized for:
 
 ## Quick Start & Installation
 
+### 🚀 1-Click Launch (macOS, Linux & Windows)
+
+The project includes smart launch scripts that automatically verify dependencies, install any missing Python/Node packages, configure unique ports, and launch both backend and frontend servers together.
+
+#### On macOS / Linux:
+```bash
+./start.sh
+```
+
+#### On Windows:
+Double-click `start.bat` in File Explorer, or run in PowerShell:
+```powershell
+.\start.ps1
+```
+
+- **Web Application UI**: [http://localhost:5188](http://localhost:5188)
+- **API Swagger Documentation**: [http://localhost:8844/docs](http://localhost:8844/docs)
+- **Health Check**: [http://localhost:8844/api/v1/health](http://localhost:8844/api/v1/health)
+
+---
+
+### Manual Setup & Installation (Alternative)
+
 ### 1. Prerequisites & OCR Language Packs
 
 #### macOS

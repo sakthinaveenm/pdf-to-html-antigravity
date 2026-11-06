@@ -201,7 +201,34 @@ sudo apt-get install -y \
 
 ---
 
-### Step 1: Clone Repository
+### Fast 1-Click Launch (Recommended)
+
+Automated startup scripts are provided that automatically verify system runtimes, check and auto-install any missing Python or Node dependencies, configure unique port bindings, and launch both backend and frontend servers together.
+
+#### On macOS / Linux:
+```bash
+# Make executable and run (starts Backend on :8844 and Frontend on :5188)
+./start.sh
+```
+
+#### On Windows:
+Double-click `start.bat` in File Explorer, or run in PowerShell:
+```powershell
+.\start.ps1
+```
+
+Both servers will start up automatically:
+- **Web Application**: [http://localhost:5188](http://localhost:5188)
+- **REST API Docs**: [http://localhost:8844/docs](http://localhost:8844/docs)
+- **API Health**: [http://localhost:8844/api/v1/health](http://localhost:8844/api/v1/health)
+
+---
+
+### Manual Step-by-Step Launch (Alternative)
+
+If you prefer launching each component manually:
+
+#### Step 1: Clone Repository
 ```bash
 git clone https://github.com/sakthinaveenm/pdf-to-html-antigravity.git
 cd pdf-to-html-antigravity
@@ -209,11 +236,11 @@ cd pdf-to-html-antigravity
 
 ---
 
-### Step 2: Backend Setup & Launch
+#### Step 2: Backend Setup & Launch
 
 You can use standard Python virtual environments or `uv` (recommended for high speed):
 
-#### Option A: Using `uv` (Fastest)
+##### Option A: Using `uv` (Fastest)
 ```bash
 # Install uv if you don't have it
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -225,11 +252,11 @@ source .venv/bin/activate
 # Install dependencies
 uv pip install -r backend/requirements.txt
 
-# Start backend server
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+# Start backend server on unique port 8844
+uvicorn backend.app.main:app --host 0.0.0.0 --port 8844 --reload
 ```
 
-#### Option B: Using Standard Python `venv`
+##### Option B: Using Standard Python `venv`
 ```bash
 # Create and activate virtual environment
 python3.11 -m venv .venv
@@ -239,18 +266,18 @@ source .venv/bin/activate       # On Windows: .venv\Scripts\activate
 pip install --upgrade pip setuptools wheel
 pip install -r backend/requirements.txt
 
-# Start backend server
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+# Start backend server on unique port 8844
+uvicorn backend.app.main:app --host 0.0.0.0 --port 8844 --reload
 ```
 
 The backend is now live:
-- **API Health**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
-- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Engine Capabilities**: [http://localhost:8000/api/v1/capabilities](http://localhost:8000/api/v1/capabilities)
+- **API Health**: [http://localhost:8844/api/v1/health](http://localhost:8844/api/v1/health)
+- **Interactive Swagger Docs**: [http://localhost:8844/docs](http://localhost:8844/docs)
+- **Engine Capabilities**: [http://localhost:8844/api/v1/capabilities](http://localhost:8844/api/v1/capabilities)
 
 ---
 
-### Step 3: Frontend Setup & Launch
+#### Step 3: Frontend Setup & Launch
 
 Open a second terminal window:
 
@@ -258,6 +285,14 @@ Open a second terminal window:
 cd pdf-to-html-antigravity/frontend
 
 # Install dependencies
+npm install
+
+# Start Vite on unique port 5188 with backend proxy set to 8844
+BACKEND_PORT=8844 PORT=5188 npm run dev -- --port 5188
+```
+
+The frontend web app is accessible at:
+- **Web App UI**: [http://localhost:5188](http://localhost:5188)
 npm install
 
 # Start Vite development server
@@ -318,6 +353,9 @@ docker compose -f docker/docker-compose.yml up --build
 
 ```text
 pdf-to-html-antigravity/
+├── start.sh                        # 1-Click Launch script for macOS / Linux (Unique ports: 8844 & 5188)
+├── start.bat                       # 1-Click Launch script for Windows CMD / File Explorer
+├── start.ps1                       # 1-Click Launch script for Windows PowerShell
 ├── .gitignore                      # Configured for Python, Node, SQLite, OS files
 ├── README.md                       # High-level architecture and features
 ├── PROJECT_HANDOVER.md             # This comprehensive handover guide
@@ -406,3 +444,4 @@ When continuing development on your new laptop, recommended next steps include:
 ---
 
 *This platform was built to meet strict enterprise standards for open-source software: semantic HTML fidelity, local privacy, zero placeholder code, and comprehensive automated test coverage.*
+
